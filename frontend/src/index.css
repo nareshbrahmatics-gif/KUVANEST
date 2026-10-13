@@ -1,0 +1,64 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    margin: 0;
+    font-family: "DM Sans", sans-serif;
+    color: #202124;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, .font-display {
+    font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+::selection { background: #FEF3D6; }
+
+@layer base {
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 220 6% 13%;
+        --card: 0 0% 100%;
+        --card-foreground: 220 6% 13%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 220 6% 13%;
+        --primary: 43 83% 49%;
+        --primary-foreground: 220 6% 13%;
+        --secondary: 0 0% 97%;
+        --secondary-foreground: 220 6% 13%;
+        --muted: 0 0% 97%;
+        --muted-foreground: 210 4% 39%;
+        --accent: 43 100% 95%;
+        --accent-foreground: 220 6% 13%;
+        --destructive: 4 71% 50%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 0 0% 90%;
+        --input: 0 0% 88%;
+        --ring: 43 83% 49%;
+        --radius: 0.875rem;
+    }
+}
+
+@layer base {
+    * { @apply border-border; }
+    body { @apply bg-background text-foreground; }
+}
+
+@layer utilities {
+    .kn-rise { animation: kn-rise .5s cubic-bezier(.2,.7,.2,1) both; }
+    .kn-card { transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease; }
+    .kn-card:hover { transform: translateY(-3px); box-shadow: 0 14px 30px -14px rgba(201,143,10,.45); }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+}
+
+@keyframes kn-rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@layer base {
+    [data-debug-wrapper="true"] { display: contents !important; }
+}

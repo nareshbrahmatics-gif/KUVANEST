@@ -1,0 +1,182 @@
+{
+  "project_identity": {
+    "name": "KuvaNest",
+    "tagline": "Your Files. Your Photos. Your Storage. One Simple Nest.",
+    "positioning": "India-first personal cloud storage & smart backup platform. Simple alternative to Google Drive/Photos with local INR pricing, archive import (Google Takeout, iCloud, Dropbox, OneDrive, Azure), family vaults, high speed regional servers, and admin governance.",
+    "emotional_archetype": "ORGANIC & WARM HIGH-TRUST TECH (Warm Golden Yellow, Soft Stone Greys, High Contrast Clear Typography, Tactile Folder Cards)"
+  },
+  "design_system": {
+    "color_palette": {
+      "primary": "#E5AA16",
+      "primary_hover": "#D4990B",
+      "primary_light": "#FFF7E6",
+      "primary_subtle": "#FEF3D6",
+      "background_main": "#FFFFFF",
+      "background_secondary": "#F7F7F7",
+      "background_card": "#FFFFFF",
+      "background_dark": "#121316",
+      "text_primary": "#202124",
+      "text_secondary": "#5F6368",
+      "text_muted": "#80868B",
+      "border_light": "#E0E0E0",
+      "border_focus": "#E5AA16",
+      "accent_success": "#1E8E3E",
+      "accent_warning": "#F9AB00",
+      "accent_danger": "#D93025",
+      "accent_info": "#1A73E8",
+      "folder_card_bg": "#FEF9E7",
+      "folder_card_border": "#F3E2B4",
+      "folder_icon_color": "#E5AA16"
+    },
+    "typography": {
+      "headings_font": "Plus Jakarta Sans, Outfit, sans-serif",
+      "body_font": "DM Sans, sans-serif",
+      "mono_font": "JetBrains Mono, monospace",
+      "rules": {
+        "anti_inter_heading": "DO NOT use Inter for section titles or main headings. Use Plus Jakarta Sans or Outfit for character and friendly authority.",
+        "h1": "text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[#202124]",
+        "h2": "text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[#202124]",
+        "h3": "text-xl sm:text-2xl font-semibold text-[#202124]",
+        "h4": "text-lg font-semibold text-[#202124]",
+        "body": "text-base leading-relaxed text-[#202124]",
+        "small": "text-sm text-[#5F6368]",
+        "overline": "text-xs font-bold uppercase tracking-widest text-[#E5AA16]"
+      }
+    },
+    "spacing_and_radii": {
+      "border_radius_card": "rounded-2xl (16px)",
+      "border_radius_button": "rounded-xl (12px) or rounded-full",
+      "border_radius_badge": "rounded-full",
+      "container_padding": "p-4 sm:p-6 md:p-8",
+      "touch_targets": "min-h-[44px] min-w-[44px] for effortless tapping on mobile"
+    },
+    "header_and_navigation": {
+      "mobile_bottom_nav": "Fixed bottom bar on mobile with 5 items: Home | Photos | Files | Transfer | Account. Active state highlighted with warm yellow tint (#FFF7E6) and #E5AA16 icon/text.",
+      "desktop_header": "Sticky top bar with opaque blurred background (backdrop-blur-md bg-white/90 border-b border-gray-100 z-50). NEVER transparent.",
+      "dropdown_rule": "Dropdown menus MUST have opaque background (bg-white text-[#202124] shadow-xl border border-gray-100 z-50). NEVER transparent."
+    }
+  },
+  "key_pages_and_components": [
+    {
+      "page": "Landing Page",
+      "components": [
+        "Hero section with bold headline 'Your Files. Your Photos. Your Storage. One Simple Nest.' and quick storage meter preview",
+        "Migration Banner showcasing 1-Click Import from Google Takeout, iCloud, Dropbox, OneDrive, Azure",
+        "INR Pricing Section with toggle (Starter ₹100/50GB, Personal ₹199/200GB, Family ₹499/1TB, Premium ₹999/2TB)",
+        "Indian Context Trust Badges (UPI support, Indian regional data centers, 100% data privacy, fast local downloads)",
+        "Interactive feature grid showing folder cards, auto photo backup, and instant sharing",
+        "Testimonials & FAQ accordion",
+        "CTA Footer"
+      ]
+    },
+    {
+      "page": "Login & Auth Modal/Page",
+      "components": [
+        "Email & Password login/signup forms",
+        "Google Sign-In button simulation",
+        "OTP / Quick login option for Indian mobile users"
+      ]
+    },
+    {
+      "page": "Home Dashboard",
+      "components": [
+        "Storage Meter Card: 32.5 GB of 100 GB used (67.5 GB available) with colorful breakdown (Photos 18GB, Videos 10GB, Docs 4.5GB) and prominent 'Upgrade' button",
+        "Large Yellow Folder Cards Grid: 'My Photos', 'My Documents', 'My Videos', 'Google Backup', 'Family Files', 'My Hard Disk'",
+        "Import Shortcut Card: 'Move from Google/iCloud/Dropbox' leading directly to Transfer dashboard",
+        "Recent Photos horizontal scroll bar",
+        "Recent Files list with quick action triggers"
+      ]
+    },
+    {
+      "page": "Files Browser",
+      "components": [
+        "Breadcrumb trail navigation",
+        "Upload drag-drop zone & button modal",
+        "View modes toggle (Grid view vs List view)",
+        "Search bar, sorting dropdown (Name, Date, Size), and filter pills (All, PDFs, Images, Archives)",
+        "File cards/rows with context actions: Preview, Download, Rename, Move, Copy, Delete, Share Link",
+        "File preview modal (PDF reader simulation, Image viewer, Video player mockup)"
+      ]
+    },
+    {
+      "page": "Photos Gallery",
+      "components": [
+        "Date-grouped photo masonry grid (e.g. 'Today', 'Yesterday', 'May 2026', 'Manali Trip 2025')",
+        "Filter bar: All Photos, Favorites, Albums, Screenshots, Videos",
+        "Fullscreen Lightbox modal with zoom, download, share, and favorite heart toggle",
+        "Auto-album smart collection tiles"
+      ]
+    },
+    {
+      "page": "Transfer / Migration Dashboard",
+      "components": [
+        "Source selection tabs: Google Takeout, iCloud Archive, Dropbox Zip, OneDrive, Azure Blob Archive",
+        "Drag & drop zip archive upload or cloud connector link simulation",
+        "Active Migration Jobs progress list: Real-time progress percentage bar, speed (MB/s), extracted file count, current status (Extracting, Indexing, Completed)",
+        "Migration history log table"
+      ]
+    },
+    {
+      "page": "Recycle Bin",
+      "components": [
+        "List of deleted files with original path and deletion date",
+        "Actions: Restore selected, Permanently Delete, Empty Recycle Bin",
+        "Auto-delete retention indicator (e.g. 'Items deleted forever after 30 days')"
+      ]
+    },
+    {
+      "page": "Plans & Billing",
+      "components": [
+        "Current Subscription Card showing active plan (e.g., Personal ₹199/mo) and renewal date",
+        "INR Plans Cards: Starter (₹100/mo - 50GB), Personal (₹199/mo - 200GB), Family (₹499/mo - 1TB with 5 family members), Premium (₹999/mo - 2TB)",
+        "UPI / NetBanking / Card checkout modal simulation",
+        "Billing history & invoice downloads table"
+      ]
+    },
+    {
+      "page": "Account & Family Sharing",
+      "components": [
+        "User profile details (Name, Email, Mobile number, Joined date)",
+        "Family Vault Manager: Add/remove family members (e.g., 3 of 5 slots filled), set storage caps",
+        "Security settings: 2FA state, active sessions device manager",
+        "Storage usage visual breakdown"
+      ]
+    },
+    {
+      "page": "Admin Dashboard",
+      "components": [
+        "Admin key metrics cards: Total Registered Users, Active Subscriptions, Monthly Recurring Revenue (MRR in ₹), Total Storage Consumed (TB)",
+        "User Management Table: Search, filter by plan, status (Active/Suspended), storage used, action menu",
+        "Active Migration Jobs Monitor: System-wide migration queue and bandwidth usage",
+        "Storage Infrastructure Health: Regional server nodes status",
+        "Plan Config & Pricing settings panel"
+      ]
+    }
+  ],
+  "image_urls": {
+    "hero_family": "https://images.unsplash.com/photo-1659352790654-058e9077a4f4",
+    "nature_scenic_1": "https://images.unsplash.com/photo-1595433306946-233f47e4af3a",
+    "nature_scenic_2": "https://images.unsplash.com/photo-1709623868300-e3b78cad10e1",
+    "nature_scenic_3": "https://images.unsplash.com/photo-1615966192539-f1731963b19a",
+    "nature_scenic_4": "https://images.unsplash.com/photo-1616388969587-8196f32388b4",
+    "user_avatar_1": "https://images.unsplash.com/photo-1749700332031-cf99864959ea",
+    "user_avatar_2": "https://images.unsplash.com/photo-1757744705465-ea08b0ddc38a",
+    "user_avatar_3": "https://images.unsplash.com/photo-1790575545510-85807524d1c6",
+    "user_avatar_4": "https://images.unsplash.com/photo-1725033489648-a819750348eb"
+  },
+  "testing_and_accessibility": {
+    "data_testid_requirement": "CRITICAL: Every interactive button, link, form field, file row, folder card, tab, modal close, and dropdown menu MUST include an explicit data-testid attribute in kebab-case (e.g. data-testid=\"home-folder-my-photos\", data-testid=\"storage-upgrade-button\", data-testid=\"files-upload-btn\").",
+    "contrast_standard": "All body text must achieve a minimum 4.5:1 APCA/WCAG contrast against backgrounds. Dark grey text (#202124) on white/yellow light backgrounds.",
+    "keyboard_nav": "Full keyboard access with clear yellow focus ring (focus:ring-2 focus:ring-[#E5AA16] focus:outline-none)."
+  },
+  "instructions_to_main_agent": [
+    "1. Read this guidelines file carefully before modifying frontend code.",
+    "2. Use JavaScript (.js / .jsx) components as per the project setup.",
+    "3. Maintain warm golden yellow (#E5AA16) as the main brand identity. Ensure folder icons and primary CTA buttons feature rich yellow hues.",
+    "4. Ensure mobile-first responsiveness with a clean bottom navigation bar on screens under 768px (Home | Photos | Files | Transfer | Account).",
+    "5. Use Lucide icons (Folder, Image, FileText, Upload, RefreshCw, Users, Shield, HardDrive, Trash2, Settings, CreditCard, ChevronRight, Search, Grid, List, etc.).",
+    "6. Make sure all modals (upload, migration, file preview, checkout) have clear backdrop overlays (bg-black/50) and robust data-testid tags.",
+    "7. Include all 10 views/pages smoothly switchable or routable (Landing, Login, Dashboard Home, Files Browser, Photos Gallery, Transfer Migration, Recycle Bin, Billing & Plans, Account, Admin Dashboard).",
+    "8. Never leave dropdowns or header backgrounds transparent. Always use explicit bg-white or solid frosted glass."
+  ]
+}
