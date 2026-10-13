@@ -37,7 +37,7 @@ async function uploadArchive(file, onProgress) {
   return up.upload_id;
 }
 
-const STATUS = { queued: "bg-gray-100 text-[#5F6368]", running: "bg-[#FFF7E6] text-[#9A6A00]", paused: "bg-blue-50 text-[#1A73E8]", completed: "bg-green-50 text-[#1E8E3E]", failed: "bg-red-50 text-[#D93025]", cancelled: "bg-gray-100 text-[#5F6368]" };
+const STATUS = { queued: "bg-gray-100 text-[#5F6368]", running: "bg-[#E8F4FA] text-[#156E96]", paused: "bg-blue-50 text-[#1A73E8]", completed: "bg-green-50 text-[#1E8E3E]", failed: "bg-red-50 text-[#D93025]", cancelled: "bg-gray-100 text-[#5F6368]" };
 
 const JobCard = ({ j, onAction }) => {
   const pct = j.total_files ? Math.round((j.processed / j.total_files) * 100) : 0;
@@ -63,7 +63,7 @@ const JobCard = ({ j, onAction }) => {
         {j.status === "paused" && <A a="resume" icon={Play} label="Resume" />}
         {ACTIVE.includes(j.status) && <A a="cancel" icon={X} label="Cancel" />}
         {["failed", "cancelled", "completed"].includes(j.status) && <A a="retry" icon={RotateCw} label="Retry" />}
-        {j.dest_folder_id && <Link to={`/files/${j.dest_folder_id}`} data-testid={`job-open-folder-${j.job_id}`} className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium bg-[#FFF7E6] text-[#9A6A00]"><FolderOpen className="w-3.5 h-3.5" />Open folder</Link>}
+        {j.dest_folder_id && <Link to={`/files/${j.dest_folder_id}`} data-testid={`job-open-folder-${j.job_id}`} className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium bg-[#E8F4FA] text-[#156E96]"><FolderOpen className="w-3.5 h-3.5" />Open folder</Link>}
         {!!j.errors?.length && <button onClick={() => setOpen(!open)} className="text-sm font-medium text-[#D93025] px-2" data-testid={`job-errors-toggle-${j.job_id}`}>{open ? "Hide" : "View"} report ({j.errors.length})</button>}
       </div>
       {open && <ul className="text-xs space-y-1 max-h-48 overflow-y-auto bg-[#F7F7F7] rounded-xl p-3">{j.errors.map((e, i) => <li key={i}><b>{e.file}</b> — {e.error}</li>)}</ul>}
@@ -107,16 +107,16 @@ export default function Transfer() {
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {SOURCES.map((s) => (
           <button key={s.id} onClick={() => setSrc(s)} data-testid={`transfer-source-${s.id}`}
-            className={`kn-card rounded-2xl border p-4 text-left ${src.id === s.id ? "border-[#E5AA16] bg-[#FFF7E6]" : "border-gray-200"}`}>
-            <s.icon className="w-6 h-6 text-[#C98F0A]" /><p className="font-semibold mt-3 text-sm">{s.name}</p><p className="text-xs text-[#5F6368]">ZIP archive</p>
+            className={`kn-card rounded-2xl border p-4 text-left ${src.id === s.id ? "border-[#1F94C8] bg-[#E8F4FA]" : "border-gray-200"}`}>
+            <s.icon className="w-6 h-6 text-[#1F94C8]" /><p className="font-semibold mt-3 text-sm">{s.name}</p><p className="text-xs text-[#5F6368]">ZIP archive</p>
           </button>
         ))}
       </div>
       <div className="grid lg:grid-cols-[1.2fr_1fr] gap-6">
         <div className="rounded-2xl bg-[#202124] text-white p-6 sm:p-8">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#F4C84D]">Import from {src.name}</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#7CCBEF]">Import from {src.name}</p>
           <ol className="mt-5 space-y-3">
-            {src.steps.map((s, i) => <li key={s} className="flex gap-3"><span className="w-7 h-7 rounded-full bg-[#E5AA16] text-[#202124] font-bold text-sm flex items-center justify-center shrink-0">{i + 1}</span><span className="text-white/85 pt-0.5">{s}</span></li>)}
+            {src.steps.map((s, i) => <li key={s} className="flex gap-3"><span className="w-7 h-7 rounded-full bg-[#1F94C8] text-white font-bold text-sm flex items-center justify-center shrink-0">{i + 1}</span><span className="text-white/85 pt-0.5">{s}</span></li>)}
           </ol>
           <input ref={ref} type="file" accept=".zip" hidden onChange={onPick} data-testid="transfer-archive-input" />
           <Button onClick={() => ref.current.click()} disabled={pct !== null} data-testid="transfer-upload-archive-btn" className="mt-7 h-12 rounded-xl px-6 font-semibold">

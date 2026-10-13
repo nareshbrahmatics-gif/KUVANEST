@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Heart, Download, Share2, Trash2, Play, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart, Download, Share2, Trash2, Play, X, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { FileThumb } from "@/components/FileThumb";
@@ -7,7 +7,7 @@ import { FilePreview, ShareDialog } from "@/components/FileDialogs";
 import { UploadButton } from "@/components/UploadButton";
 import { api, errMsg, downloadFile } from "@/lib/api";
 
-const TABS = [["all", "All"], ["image", "Photos"], ["video", "Videos"], ["favorites", "Favourites"]];
+const TABS = [["all", "All"], ["albums", "Smart Albums"], ["image", "Photos"], ["video", "Videos"], ["favorites", "Favourites"]];
 
 const dayLabel = (s) => {
   const d = new Date(s), t = new Date();
@@ -21,12 +21,41 @@ const Btn = ({ on, label, children, testId }) => (
   <button onClick={on} aria-label={label} data-testid={testId} className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center">{children}</button>
 );
 
+const AlbumGrid = ({ albums, onOpen }) => {
+  if (!albums) return null;
+  if (!albums.length) return <div className="rounded-2xl bg-[#FEF9E7] p-12 text-center text-[#5F6368]" data-testid="albums-empty-state">Albums appear automatically once you add photos.</div>;
+  const Section = ({ type, title }) => {
+    const list = albums.filter((a) => a.type === type);
+    return !!list.length && (
+      <section>
+        <h2 className="font-display font-bold text-lg mb-3">{title}</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {list.map((a) => (
+            <button key={a.album_id} onClick={() => onOpen(a)} data-testid={`album-card-${a.album_id}`} className="kn-card text-left rounded-2xl overflow-hidden border border-gray-100 bg-white">
+              <div className="aspect-[4/3] relative"><FileThumb file={a.cover} />{type === "trip" && <MapPin className="absolute top-2 left-2 w-5 h-5 text-white drop-shadow" />}</div>
+              <div className="p-3"><p className="font-semibold truncate">{a.title}</p><p className="text-xs text-[#5F6368]">{a.subtitle ? `${a.subtitle} · ` : ""}{a.count} items</p></div>
+            </button>
+          ))}
+        </div>
+      </section>
+    );
+  };
+  return <div className="space-y-8"><Section type="trip" title="Trips" /><Section type="month" title="By month" /></div>;
+};
+
 export default function Photos() {
   const [tab, setTab] = useState("all");
   const [items, setItems] = useState(null);
   const [idx, setIdx] = useState(-1);
   const [share, setShare] = useState(null);
-  const load = useCallback(() => api.get("/photos", { params: { kind: tab } }).then(({ data }) => setItems(data)), [tab]);
+  const [albums, setAlbums] = useState(null);
+  const [album, setAlbum] = useState(null);
+  const load = useCallback(async () => {
+    if (tab !== "albums") return setItems((await api.get("/photos", { params: { kind: tab } })).data);
+    if (album) return setItems((await api.get(`/albums/${album.album_id}`)).data.files);
+    setItems(null);
+    setAlbums((await api.get("/albums")).data);
+  }, [tab, album]);
   useEffect(() => { load(); }, [load]);
 
   const groups = useMemo(() => {
@@ -61,10 +90,13 @@ export default function Photos() {
       </div>
       <div className="flex gap-2 overflow-x-auto no-scrollbar">
         {TABS.map(([v, l]) => (
-          <button key={v} onClick={() => setTab(v)} data-testid={`photos-tab-${v}`}
-            className={`px-5 h-10 rounded-full text-sm font-semibold shrink-0 ${tab === v ? "bg-[#E5AA16] text-[#202124]" : "bg-[#F7F7F7] text-[#5F6368]"}`}>{l}</button>
+          <button key={v} onClick={() => { setTab(v); setAlbum(null); }} data-testid={`photos-tab-${v}`}
+            className={`px-5 h-10 rounded-full text-sm font-semibold shrink-0 ${tab === v ? "bg-[#1F94C8] text-white" : "bg-[#F7F7F7] text-[#5F6368]"}`}>{l}</button>
         ))}
       </div>
+      {tab === "albums" && !album && <AlbumGrid albums={albums} onOpen={setAlbum} />}
+      {album && <div className="flex items-center gap-3"><button onClick={() => setAlbum(null)} data-testid="album-back-btn" className="w-10 h-10 rounded-xl bg-[#F7F7F7] flex items-center justify-center" aria-label="Back to albums"><ChevronLeft className="w-5 h-5" /></button>
+        <div><p className="font-display font-bold text-xl" data-testid="album-title">{album.title}</p><p className="text-sm text-[#5F6368]">{album.subtitle || `${album.count} items`}</p></div></div>}
       {items && !items.length && <div className="rounded-2xl bg-[#FEF9E7] p-12 text-center text-[#5F6368]" data-testid="photos-empty-state">No photos here yet. Add photos or import them from Google Takeout or iCloud.</div>}
       {groups.map((g) => (
         <section key={g.label}>

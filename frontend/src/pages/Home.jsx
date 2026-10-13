@@ -37,7 +37,7 @@ export default function HomePage() {
     <div className="space-y-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#C98F0A]">KuvaNest</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#1F94C8]">KuvaNest</p>
           <h1 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight mt-1" data-testid="home-greeting">Namaste, {user?.name?.split(" ")[0]}</h1>
         </div>
         <UploadButton auto onDone={load} testId="home-upload-btn" label="Upload files" />
@@ -48,15 +48,15 @@ export default function HomePage() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-lg font-bold">My Folders</h2>
-          <Link to="/files" className="text-sm font-semibold text-[#9A6A00] hover:underline" data-testid="home-view-all-folders">View all</Link>
+          <Link to="/files" className="text-sm font-semibold text-[#156E96] hover:underline" data-testid="home-view-all-folders">View all</Link>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
           {(d?.folders || []).map((f, i) => <FolderCard key={f.folder_id} f={f} i={i} />)}
         </div>
       </section>
 
-      <Link to="/transfer" data-testid="home-move-from-google" className="kn-card flex items-center gap-4 rounded-2xl border border-gray-200 p-5 hover:border-[#E5AA16]">
-        <div className="w-12 h-12 rounded-xl bg-[#FFF7E6] flex items-center justify-center"><ArrowLeftRight className="w-6 h-6 text-[#C98F0A]" /></div>
+      <Link to="/transfer" data-testid="home-move-from-google" className="kn-card flex items-center gap-4 rounded-2xl border border-gray-200 p-5 hover:border-[#1F94C8]">
+        <div className="w-12 h-12 rounded-xl bg-[#E8F4FA] flex items-center justify-center"><ArrowLeftRight className="w-6 h-6 text-[#1F94C8]" /></div>
         <div className="flex-1">
           <p className="font-display font-bold">Move from Google, iCloud or Dropbox</p>
           <p className="text-sm text-[#5F6368]">Import your files and photos. Your originals stay untouched.</p>
@@ -68,7 +68,7 @@ export default function HomePage() {
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display text-lg font-bold">Recent photos</h2>
-            <Link to="/photos" className="text-sm font-semibold text-[#9A6A00] hover:underline">See all</Link>
+            <Link to="/photos" className="text-sm font-semibold text-[#156E96] hover:underline">See all</Link>
           </div>
           <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4">
             {d.recent_photos.map((p) => (

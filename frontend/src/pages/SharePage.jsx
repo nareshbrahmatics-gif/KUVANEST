@@ -15,7 +15,7 @@ export default function SharePage() {
   return (
     <div className="min-h-screen bg-[#F7F7F7]">
       <header className="h-16 px-6 flex items-center justify-between bg-white border-b border-gray-100"><Link to="/"><Logo /></Link>
-        <Link to="/login" className="text-sm font-semibold text-[#9A6A00]">Get your own nest</Link></header>
+        <Link to="/login" className="text-sm font-semibold text-[#156E96]">Get your own nest</Link></header>
       <main className="max-w-4xl mx-auto p-6">
         {err && <div className="rounded-2xl bg-white p-12 text-center text-[#5F6368]" data-testid="share-error">{err}</div>}
         {d && <div className="rounded-2xl bg-white p-6 space-y-5" data-testid="share-page">

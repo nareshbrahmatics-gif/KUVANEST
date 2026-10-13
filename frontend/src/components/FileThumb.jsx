@@ -6,9 +6,9 @@ const TINT = { document: "#1A73E8", archive: "#1E8E3E", video: "#C98F0A", audio:
 
 export const canPreviewImage = (f) => f.kind === "image" && !/image\/hei[cf]/.test(f.mime);
 
-export const FileThumb = ({ file, className = "w-full h-full", iconSize = "w-8 h-8" }) => {
+export const FileThumb = ({ file, className = "w-full h-full", iconSize = "w-8 h-8", src }) => {
   if (canPreviewImage(file)) {
-    return <img src={fileUrl(file.file_id)} alt={file.name} loading="lazy" className={`${className} object-cover`} />;
+    return <img src={src || fileUrl(file.file_id)} alt={file.name} loading="lazy" className={`${className} object-cover`} />;
   }
   const Icon = ICONS[file.kind] || File;
   return (

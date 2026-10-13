@@ -37,7 +37,7 @@ export const MoveDialog = ({ open, onOpenChange, title, onSubmit, excludeId }) =
         <div className="max-h-72 overflow-y-auto space-y-1 -mx-1 px-1">
           {opts.map((f) => (
             <button key={f.folder_id} onClick={() => setSel(f.folder_id)} data-testid={`move-option-${f.folder_id}`}
-              className={`w-full text-left px-4 py-3 rounded-xl text-sm transition-colors ${sel === f.folder_id ? "bg-[#FFF7E6] text-[#9A6A00] font-semibold" : "hover:bg-[#F7F7F7]"}`}>
+              className={`w-full text-left px-4 py-3 rounded-xl text-sm transition-colors ${sel === f.folder_id ? "bg-[#E8F4FA] text-[#156E96] font-semibold" : "hover:bg-[#F7F7F7]"}`}>
               {f.path}
             </button>
           ))}
@@ -68,7 +68,7 @@ export const ShareDialog = ({ file, onOpenChange }) => {
         <div className="flex gap-2">
           {[1, 7, 30].map((d) => (
             <button key={d} onClick={() => setDays(d)} data-testid={`share-days-${d}`}
-              className={`px-4 py-2 rounded-full text-sm font-medium border ${days === d ? "bg-[#FFF7E6] border-[#E5AA16] text-[#9A6A00]" : "border-gray-200"}`}>{d} day{d > 1 ? "s" : ""}</button>
+              className={`px-4 py-2 rounded-full text-sm font-medium border ${days === d ? "bg-[#E8F4FA] border-[#1F94C8] text-[#156E96]" : "border-gray-200"}`}>{d} day{d > 1 ? "s" : ""}</button>
           ))}
         </div>
         {link ? (

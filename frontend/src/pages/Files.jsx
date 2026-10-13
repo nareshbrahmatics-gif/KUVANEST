@@ -79,7 +79,7 @@ export default function Files() {
 
   return (
     <div onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)} onDrop={onDrop}
-      className={`relative min-h-[60vh] rounded-2xl transition-colors ${drag ? "bg-[#FFF7E6] outline-dashed outline-2 outline-[#E5AA16]" : ""}`}>
+      className={`relative min-h-[60vh] rounded-2xl transition-colors ${drag ? "bg-[#E8F4FA] outline-dashed outline-2 outline-[#1F94C8]" : ""}`}>
       <nav className="flex items-center gap-1 text-sm text-[#5F6368] flex-wrap" data-testid="files-breadcrumbs">
         <Link to="/files" className="hover:text-[#202124] font-medium" data-testid="breadcrumb-root">My KuvaNest</Link>
         {d?.breadcrumbs.map((c) => (

@@ -9,7 +9,7 @@ import { api, errMsg, fmtBytes, fmtDate, inr } from "@/lib/api";
 
 const Stat = ({ icon: I, label, value, testId }) => (
   <div className="rounded-2xl border border-gray-100 p-5" data-testid={testId}>
-    <I className="w-5 h-5 text-[#C98F0A]" /><p className="font-display text-2xl font-extrabold mt-3">{value}</p><p className="text-sm text-[#5F6368]">{label}</p>
+    <I className="w-5 h-5 text-[#1F94C8]" /><p className="font-display text-2xl font-extrabold mt-3">{value}</p><p className="text-sm text-[#5F6368]">{label}</p>
   </div>
 );
 
@@ -81,7 +81,7 @@ export default function Admin() {
           <Table testId="admin-migrations-table" head={["User", "Source", "Archive", "Status", "Files", "Imported", "Failed", "Created"]} rows={jobs.map((j) => [j.email, j.source_label, j.archive_name, j.status, j.total_files, j.imported, j.failed, fmtDate(j.created_at)])} />
         </TabsContent>
         <TabsContent value="plans" className="space-y-3 mt-5">
-          <div className="flex items-end gap-3 rounded-xl bg-[#FFF7E6] p-4"><label className="text-sm font-semibold">GST %<Input type="number" value={gst} onChange={(e) => setGst(e.target.value)} className="h-10 w-28 rounded-lg mt-1 bg-white" data-testid="admin-gst-input" /></label><Button onClick={saveGst} className="rounded-lg" data-testid="admin-gst-save">Save GST</Button></div>
+          <div className="flex items-end gap-3 rounded-xl bg-[#E8F4FA] p-4"><label className="text-sm font-semibold">GST %<Input type="number" value={gst} onChange={(e) => setGst(e.target.value)} className="h-10 w-28 rounded-lg mt-1 bg-white" data-testid="admin-gst-input" /></label><Button onClick={saveGst} className="rounded-lg" data-testid="admin-gst-save">Save GST</Button></div>
           {plans.plans.map((p) => <PlanEditor key={p.plan_id} p={p} onSaved={loadPlans} />)}
         </TabsContent>
         <TabsContent value="payments" className="mt-5">

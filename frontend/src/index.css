@@ -15,7 +15,7 @@ h1, h2, h3, h4, .font-display {
     font-family: "Plus Jakarta Sans", sans-serif;
 }
 
-::selection { background: #FEF3D6; }
+::selection { background: #D6ECF7; }
 
 @layer base {
     :root {
@@ -25,19 +25,19 @@ h1, h2, h3, h4, .font-display {
         --card-foreground: 220 6% 13%;
         --popover: 0 0% 100%;
         --popover-foreground: 220 6% 13%;
-        --primary: 43 83% 49%;
-        --primary-foreground: 220 6% 13%;
+        --primary: 199 73% 45%;
+        --primary-foreground: 0 0% 100%;
         --secondary: 0 0% 97%;
         --secondary-foreground: 220 6% 13%;
         --muted: 0 0% 97%;
         --muted-foreground: 210 4% 39%;
-        --accent: 43 100% 95%;
+        --accent: 199 70% 95%;
         --accent-foreground: 220 6% 13%;
         --destructive: 4 71% 50%;
         --destructive-foreground: 0 0% 100%;
         --border: 0 0% 90%;
         --input: 0 0% 88%;
-        --ring: 43 83% 49%;
+        --ring: 199 73% 45%;
         --radius: 0.875rem;
     }
 }

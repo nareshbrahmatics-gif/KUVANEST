@@ -31,7 +31,7 @@ export default function Account() {
   return (
     <div className="space-y-8 max-w-3xl">
       <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-2xl bg-[#E5AA16] flex items-center justify-center font-display text-2xl font-extrabold overflow-hidden">
+        <div className="w-16 h-16 rounded-2xl bg-[#1F94C8] text-white flex items-center justify-center font-display text-2xl font-extrabold overflow-hidden">
           {user?.picture ? <img src={user.picture} alt="" className="w-full h-full object-cover" /> : user?.name?.[0]}
         </div>
         <div><h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight" data-testid="account-name">{user?.name}</h1><p className="text-[#5F6368]" data-testid="account-email">{user?.email}</p></div>

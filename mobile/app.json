@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "KuvaNest",
+    "slug": "kuvanest",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
+    "splash": { "image": "./assets/icon.png", "resizeMode": "contain", "backgroundColor": "#1F94C8" },
+    "ios": { "bundleIdentifier": "com.kuvanest.app", "infoPlist": { "NSPhotoLibraryUsageDescription": "KuvaNest backs up the photos you choose." } },
+    "android": { "package": "com.kuvanest.app", "adaptiveIcon": { "foregroundImage": "./assets/icon.png", "backgroundColor": "#1F94C8" } },
+    "extra": { "apiUrl": "https://nest-storage.preview.emergentagent.com/api" }
+  }
+}

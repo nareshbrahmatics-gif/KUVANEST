@@ -43,25 +43,25 @@ export default function Login() {
 
   const GoogleBtn = () => (
     <Button type="button" variant="outline" onClick={googleLogin} data-testid="google-signin-btn"
-      className="w-full h-12 rounded-xl font-semibold border-gray-200 hover:bg-[#F7F7F7]">
+      className="w-full h-12 rounded-xl font-semibold border-[#E5AA16] bg-[#FEF9E7] hover:bg-[#FDF0C8]">
       <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="#202124" strokeWidth="2" /><path d="M12 8v8M8 12h8" stroke="#E5AA16" strokeWidth="2.4" strokeLinecap="round" /></svg>
       Continue with Google
     </Button>
   );
   const Submit = ({ children, id }) => (
-    <Button type="submit" disabled={busy} data-testid={id} className="w-full h-12 rounded-xl font-semibold text-base">
+    <Button type="submit" disabled={busy} data-testid={id} className="w-full h-12 rounded-xl font-semibold text-base bg-[#E5AA16] text-[#202124] hover:bg-[#D4990B]">
       {busy && <Loader2 className="w-4 h-4 animate-spin" />} {children}
     </Button>
   );
 
   return (
     <div className="min-h-screen grid lg:grid-cols-[1.05fr_1fr] bg-white">
-      <div className="hidden lg:flex flex-col justify-between bg-[#FEF9E7] p-12 relative overflow-hidden">
-        <Link to="/"><Logo /></Link>
+      <div className="hidden lg:flex flex-col justify-between bg-[#1F94C8] text-white p-12 relative overflow-hidden">
+        <Link to="/"><img src="/brand/kuvanest-logo-white.png" alt="KuvaNest" className="h-20 w-auto" data-testid="login-brand-logo" /></Link>
         <div className="grid grid-cols-3 gap-5 max-w-md">
           {["My Photos", "My Documents", "My Videos", "Google Backup", "Family Files", "My Hard Disk"].map((n, i) => (
             <div key={n} className="kn-rise" style={{ animationDelay: `${i * 70}ms` }}>
-              <FolderIcon className="w-20 h-16" /><p className="text-sm font-semibold mt-2">{n}</p>
+              <FolderIcon className="w-20 h-16" /><p className="text-sm font-semibold mt-2 text-white">{n}</p>
             </div>
           ))}
         </div>
@@ -92,7 +92,7 @@ export default function Login() {
                 <div className="grid grid-cols-2 gap-2">
                   {[["individual", "For me & family"], ["business", "For my business"]].map(([v, l]) => (
                     <button type="button" key={v} onClick={() => setForm({ ...form, account_type: v })} data-testid={`account-type-${v}`}
-                      className={`h-12 rounded-xl text-sm font-semibold border transition-colors ${form.account_type === v ? "border-[#E5AA16] bg-[#FFF7E6] text-[#9A6A00]" : "border-gray-200"}`}>{l}</button>
+                      className={`h-12 rounded-xl text-sm font-semibold border transition-colors ${form.account_type === v ? "border-[#1F94C8] bg-[#E8F4FA] text-[#156E96]" : "border-gray-200"}`}>{l}</button>
                   ))}
                 </div>
                 <Submit id="register-submit-btn">Create my KuvaNest</Submit>

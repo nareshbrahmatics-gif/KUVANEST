@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
-import { Home, Image, FolderOpen, ArrowLeftRight, UserRound, Trash2, CreditCard, ShieldCheck } from "lucide-react";
+import { Home, Image, FolderOpen, ArrowLeftRight, UserRound, Trash2, CreditCard, ShieldCheck, Users } from "lucide-react";
 import { Logo } from "@/components/Brand";
 import { useAuth } from "@/context/AuthContext";
 
@@ -11,6 +11,7 @@ const NAV = [
   { to: "/account", label: "Account", icon: UserRound },
 ];
 const EXTRA = [
+  { to: "/family", label: "Family", icon: Users },
   { to: "/bin", label: "Recycle Bin", icon: Trash2 },
   { to: "/plans", label: "Plans & Billing", icon: CreditCard },
 ];
@@ -21,7 +22,7 @@ const SideLink = ({ to, label, icon: Icon }) => (
     data-testid={`sidebar-nav-${label.toLowerCase().replace(/[^a-z]+/g, "-")}`}
     className={({ isActive }) =>
       `flex items-center gap-3 px-4 py-3 rounded-xl text-[15px] font-medium transition-colors ${
-        isActive ? "bg-[#FFF7E6] text-[#9A6A00]" : "text-[#5F6368] hover:bg-[#F7F7F7] hover:text-[#202124]"
+        isActive ? "bg-[#E8F4FA] text-[#156E96]" : "text-[#5F6368] hover:bg-[#F7F7F7] hover:text-[#202124]"
       }`
     }
   >
@@ -59,7 +60,7 @@ export default function AppLayout() {
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-100 grid grid-cols-5 px-2 pb-[env(safe-area-inset-bottom)]" data-testid="mobile-bottom-nav">
         {NAV.map(({ to, label, icon: Icon }) => (
           <NavLink key={to} to={to} data-testid={`bottom-nav-${label.toLowerCase()}`}
-            className={({ isActive }) => `flex flex-col items-center gap-1 py-2.5 my-1.5 rounded-xl text-[11px] font-semibold transition-colors ${isActive ? "bg-[#FFF7E6] text-[#9A6A00]" : "text-[#5F6368]"}`}>
+            className={({ isActive }) => `flex flex-col items-center gap-1 py-2.5 my-1.5 rounded-xl text-[11px] font-semibold transition-colors ${isActive ? "bg-[#E8F4FA] text-[#156E96]" : "text-[#5F6368]"}`}>
             <Icon className="w-5 h-5" /> {label}
           </NavLink>
         ))}
