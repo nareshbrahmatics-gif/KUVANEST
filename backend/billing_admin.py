@@ -122,7 +122,7 @@ class UserPatch(BaseModel):
 async def admin_user_patch(user_id: str, body: UserPatch, admin=Depends(require_admin)):
     if user_id == admin["user_id"]:
         raise HTTPException(400, "You cannot change your own account here")
-    upd = {k: v for k, v in body.model_dump().items() if v}
+    upd = {k: v for k, v in body.model_dump().items() if v is not None}
     if upd.get("role") not in (None, "user", "admin") or upd.get("status") not in (None, "active", "suspended"):
         raise HTTPException(400, "Invalid value")
     await db.users.update_one({"user_id": user_id}, {"$set": upd})

@@ -1,0 +1,40 @@
+{
+  "summary": "First-run E2E testing of KuvaNest. Backend pytest suite (29 tests) all passing. Covers auth (register/login/lockout/logout), default folders (6 system folders, cannot rename/move/delete), files (CRUD, dedup, share, favorite, search, user isolation), bin (restore/empty), plans/billing (mock pay with 18% GST, cancel renewal), admin (stats, user suspend, plans update, audit, payments), migration (Google Takeout ZIP with sidecar timestamps, unsafe path reporting, duplicates). Frontend smoke-tested on both desktop (1920x1080) and mobile (390x844): login, home with 6 folder cards + storage card, plans checkout dialog (₹118 for ₹100 Starter = 18% GST correct), invoice table creation, cancel renewal, admin page gated (non-admin -> /home), admin dashboard shows users/MRR/storage, mobile bottom nav (Home|Photos|Files|Transfer|Account) present, landing page shows 5 plan cards.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/auth/logout", "issue": "Only reads cookie session_token; Bearer-token-only clients cannot invalidate their session via this endpoint. Current web UI uses cookies so flow works, but mobile/API clients using Bearer will leak sessions."},
+      {"endpoint": "/api/admin/users/{id}", "issue": "admin_user_patch uses `if v` to pick fields; this would drop legitimate falsy values. Fine for current role/status strings, but fragile."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "(Optional) Make /api/auth/logout also delete the session referenced by the Authorization: Bearer header so API clients can log out cleanly.",
+    "(Optional) Add parentheses in migration.is_sidecar(): `(name.endswith('.json') and 'takeout' in name.lower()) or name.lower().endswith(('.ds_store','thumbs.db'))` to make precedence explicit."
+  ],
+  "critical_code_review_comments": [
+    "server.py uses deprecated @app.on_event('startup'/'shutdown'); migrate to FastAPI lifespan.",
+    "login attempts counter: when first failure occurs after lockout window elapses the branch `att.get('until','') > iso() or not att` can leave count at 1 but 'until' still from old window; works but slightly convoluted.",
+    "resume_pending() at startup auto-starts any 'running' job before archive integrity re-check; relies on run_job's own BadZipFile handling, which it has. OK.",
+    "admin_user_patch: uses `if v` filter which drops False values. Safe today but should use `is not None`.",
+    "Logout endpoint doesn't honor Bearer tokens (see minor issue)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py"
+  ],
+  "success_rate": {"backend": "100% (29/29)", "frontend": "100% of smoke-tested flows"},
+  "test_credentials": "admin@kuvanest.com / Admin@12345 ; demo@kuvanest.com / Demo@12345 (as per /app/memory/test_credentials.md).",
+  "seed_data_creation": "pytest run creates many TEST_<uuid>@kuvatest.com throwaway accounts and migration jobs (via a dynamically-generated Google Takeout ZIP). Admin table currently shows these; consider periodic cleanup of TEST_ prefixed users.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend regression suite is at /app/backend/tests/backend_test.py (pytest, 29 tests, uses REACT_APP_BACKEND_URL). Sidebar nav data-testids are kebab-case of label: `sidebar-nav-plans-billing`, `sidebar-nav-recycle-bin`. Checkout dialog testid is `checkout-dialog`, pay button `checkout-pay-btn`, total `checkout-total`. Mobile bottom nav testids: `bottom-nav-{home|photos|files|transfer|account}`.",
+  "rca of the issue": "No critical issues found. The only functional gap is: /api/auth/logout reads only the httpOnly cookie, so if a client authenticates via Bearer token (allowed by get_current_user), it cannot destroy its session through the logout endpoint. Fix: also inspect `Authorization: Bearer` in auth_routes.logout and delete the matching session row."
+}
