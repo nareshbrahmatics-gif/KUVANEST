@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { UserPlus, Users, Trash2, Check, X, FolderOpen } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { UserPlus, Users, Trash2, Check, X, FolderOpen, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,11 @@ const InviteForm = ({ onDone }) => {
   const [access, setAccess] = useState("editor");
   const send = async (e) => {
     e.preventDefault();
-    try { await api.post("/family/invite", { email, access }); toast.success(`Invitation sent to ${email}`); setEmail(""); onDone(); }
+    try {
+      const { data } = await api.post("/family/invite", { email, access });
+      data.email_sent ? toast.success(`Invitation emailed to ${email}`) : toast.warning(`Invited ${email}, but the email could not be sent. Use Resend later.`);
+      setEmail(""); onDone();
+    }
     catch (err) { toast.error(errMsg(err)); }
   };
   return (
@@ -34,8 +38,17 @@ const InviteForm = ({ onDone }) => {
 
 export default function Family() {
   const [d, setD] = useState(null);
+  const [params, setParams] = useSearchParams();
   const load = useCallback(() => api.get("/family").then(({ data }) => setD(data)), []);
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const join = params.get("join");
+    if (!join) { load(); return; }
+    setParams({}, { replace: true });
+    api.post(`/family/invitations/${join}/accept`)
+      .then(() => toast.success("You joined the family"))
+      .catch(() => toast.error("This invitation is for a different email or was already used"))
+      .finally(load);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const act = async (fn, msg) => { try { await fn(); toast.success(msg); load(); } catch (e) { toast.error(errMsg(e)); } };
   if (!d) return null;
   const canInvite = d.seats_total > 0;
@@ -73,6 +86,7 @@ export default function Family() {
             <div key={m.member_id} className="flex flex-wrap items-center gap-3 py-3" data-testid={`family-member-${m.member_id}`}>
               <div className="w-10 h-10 rounded-full bg-[#1F94C8] text-white flex items-center justify-center font-bold uppercase">{m.email[0]}</div>
               <div className="flex-1 min-w-[180px]"><p className="font-medium">{m.email}</p><p className="text-xs text-[#5F6368] capitalize">{m.status} · invited {fmtDate(m.invited_at)}</p></div>
+              {m.status === "pending" && <Button size="sm" variant="outline" className="rounded-lg" data-testid={`family-resend-${m.member_id}`} onClick={() => act(() => api.post(`/family/members/${m.member_id}/resend`), "Invitation email sent again")}><Mail className="w-4 h-4" />Resend</Button>}
               <AccessSelect value={m.access} testId={`family-member-access-${m.member_id}`} onChange={(a) => act(() => api.patch(`/family/members/${m.member_id}`, { access: a }), "Access updated")} />
               <Button size="sm" variant="ghost" className="text-[#D93025] rounded-lg" aria-label="Remove member" data-testid={`family-remove-${m.member_id}`} onClick={() => act(() => api.delete(`/family/members/${m.member_id}`), "Member removed")}><Trash2 className="w-4 h-4" /></Button>
             </div>

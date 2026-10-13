@@ -2,6 +2,8 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, EmailStr, Field
+import os
+from emailer import send_email, invite_email
 from core import (db, storage, iso, new_id, get_current_user, ensure_quota, get_plan, find_duplicate, file_doc,
                   public_file, system_folder, audit)
 
@@ -58,7 +60,22 @@ async def invite(body: InviteIn, user=Depends(get_current_user)):
          "status": "pending", "access": body.access, "invited_at": iso(), "joined_at": None}
     await db.family_members.insert_one(dict(m))
     await audit(user["user_id"], "family.invite", {"email": email})
+    subject, html = invite_email(user["name"], plan["name"], f"{os.environ['APP_URL'].rstrip('/')}/family?join={m['member_id']}")
+    m["email_sent"] = bool(await send_email(to=email, subject=subject, html=html))
+    await db.family_members.update_one({"member_id": m["member_id"]}, {"$set": {"email_sent": m["email_sent"]}})
     return m
+
+
+@router.post("/members/{member_id}/resend")
+async def resend(member_id: str, user=Depends(get_current_user)):
+    m = await db.family_members.find_one({"member_id": member_id, "owner_id": user["user_id"], "status": "pending"}, {"_id": 0})
+    if not m:
+        raise HTTPException(404, "Pending invitation not found")
+    plan, _, _ = await seats(user)
+    subject, html = invite_email(user["name"], plan["name"], f"{os.environ['APP_URL'].rstrip('/')}/family?join={member_id}")
+    if not await send_email(to=m["email"], subject=subject, html=html):
+        raise HTTPException(503, "Email is temporarily unavailable")
+    return {"ok": True}
 
 
 @router.post("/invitations/{member_id}/{action}")

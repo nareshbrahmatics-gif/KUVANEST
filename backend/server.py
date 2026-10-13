@@ -9,11 +9,12 @@ from migration import router as migration_router, resume_pending
 from billing_admin import router as billing_router, seed_plans
 from family import router as family_router
 from albums import router as albums_router
+from google_import import router as google_router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 app = FastAPI(title="KuvaNest API")
 
-for r in (auth_router, file_router, migration_router, billing_router, family_router, albums_router):
+for r in (auth_router, file_router, migration_router, billing_router, family_router, albums_router, google_router):
     app.include_router(r)
 
 
@@ -44,6 +45,7 @@ async def startup():
     await db.shares.create_index("token", unique=True)
     await db.webhook_events.create_index("event_id", unique=True)
     await db.family_members.create_index([("owner_id", 1), ("status", 1)])
+    await db.google_oauth_states.create_index("state", unique=True)
     await seed_plans()
     await seed_users()
     await resume_pending()

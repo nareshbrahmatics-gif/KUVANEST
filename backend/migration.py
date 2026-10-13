@@ -71,7 +71,7 @@ class JobIn(BaseModel):
 
 
 def job_out(j):
-    j = {k: v for k, v in j.items() if k not in ("_id", "user_id")}
+    j = {k: v for k, v in j.items() if k not in ("_id", "user_id", "items")}
     j["errors"] = j.get("errors", [])[:200]
     return j
 
@@ -119,7 +119,7 @@ async def job_action(job_id: str, action: str, user=Depends(get_current_user)):
         raise HTTPException(400, f"Cannot {action} a {st} job")
     upd = {"status": rules[action][1]}
     if action == "retry":
-        if not storage.tmp_path(f"{j['upload_id']}.zip").exists():
+        if j.get("mode") != "api" and not storage.tmp_path(f"{j['upload_id']}.zip").exists():
             raise HTTPException(400, "Archive no longer available. Please upload it again.")
         upd.update({"processed": 0, "errors": [], "failed": 0, "finished_at": None})
     await db.migration_jobs.update_one({"job_id": job_id}, {"$set": upd})
@@ -177,6 +177,9 @@ def is_sidecar(name):
 
 async def run_job(job_id):
     job = await db.migration_jobs.find_one({"job_id": job_id}, {"_id": 0})
+    if job.get("mode") == "api":
+        from google_import import run_api_job
+        return await run_api_job(job_id)
     uid = job["user_id"]
     zpath = storage.tmp_path(f"{job['upload_id']}.zip")
     try:

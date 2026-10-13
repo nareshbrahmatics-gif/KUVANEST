@@ -4,6 +4,8 @@ import { Cloud, Apple, Package, CloudCog, Server, Upload, Pause, Play, X, Rotate
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { TransferAnimation } from "@/components/TransferAnimation";
+import { GoogleImportCard } from "@/components/GoogleImport";
 import { api, errMsg, fmtBytes, fmtDate } from "@/lib/api";
 
 const SOURCES = [
@@ -13,7 +15,7 @@ const SOURCES = [
   { id: "onedrive", name: "OneDrive", icon: CloudCog, steps: ["Open onedrive.live.com", "Select files/folders and click Download (zip)", "Upload the ZIP here"] },
   { id: "azure", name: "Azure Blob", icon: Server, steps: ["Export your container with AzCopy or Storage Explorer", "Compress the export into a .zip", "Upload the ZIP here"] },
 ];
-const CONNECTORS = ["Google Drive Picker", "Google Photos Picker", "Dropbox API", "Microsoft OneDrive (Graph)", "Gmail attachments"];
+const CONNECTORS = ["Dropbox API", "Microsoft OneDrive (Graph)", "Gmail attachments"];
 const CHUNK = 5 * 1024 * 1024;
 const ACTIVE = ["queued", "running", "paused"];
 
@@ -75,6 +77,7 @@ export default function Transfer() {
   const [src, setSrc] = useState(SOURCES[0]);
   const [jobs, setJobs] = useState([]);
   const [pct, setPct] = useState(null);
+  const [fname, setFname] = useState("");
   const ref = useRef();
   const load = useCallback(() => api.get("/migrations").then(({ data }) => setJobs(data)), []);
   useEffect(() => { load(); }, [load]);
@@ -84,10 +87,12 @@ export default function Transfer() {
     return () => clearInterval(t);
   }, [jobs, load]);
 
+  const running = jobs.find((j) => j.status === "running" || j.status === "queued");
   const onPick = async (e) => {
     const f = e.target.files?.[0];
     e.target.value = "";
     if (!f) return;
+    setFname(f.name);
     setPct(0);
     try {
       const uid = await uploadArchive(f, setPct);
@@ -124,14 +129,19 @@ export default function Transfer() {
           </Button>
           <p className="text-xs text-white/60 mt-3 flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5" />Resumable upload · safe extraction · duplicate & checksum checks</p>
         </div>
+        <div className="space-y-4">
+        <GoogleImportCard onJob={(j) => setJobs((x) => [j, ...x])} />
         <div className="rounded-2xl border border-gray-200 p-6">
-          <p className="font-display font-bold">Direct connections</p>
-          <p className="text-sm text-[#5F6368] mt-1">One-tap connectors need provider approval and will arrive in a later release.</p>
+          <p className="font-display font-bold">More direct connections</p>
+          <p className="text-sm text-[#5F6368] mt-1">These need provider approval and will arrive in a later release.</p>
           <ul className="mt-4 space-y-2">
             {CONNECTORS.map((c) => <li key={c} className="flex items-center justify-between rounded-xl bg-[#F7F7F7] px-4 py-3 text-sm"><span className="flex items-center gap-2"><Lock className="w-4 h-4 text-[#80868B]" />{c}</span><span className="text-xs font-semibold text-[#80868B]">Coming soon</span></li>)}
           </ul>
         </div>
+        </div>
       </div>
+      {pct !== null ? <TransferAnimation from={src.name} label={`Uploading ${fname} to KuvaNest`} pct={pct} />
+        : running && <TransferAnimation from={running.source_label} label={`Copying ${running.processed}/${running.total_files} files from ${running.source_label}`} pct={running.total_files ? Math.round((running.processed / running.total_files) * 100) : 0} />}
       <section>
         <h2 className="font-display text-lg font-bold mb-4">Your imports</h2>
         {jobs.length ? <div className="grid md:grid-cols-2 gap-4">{jobs.map((j) => <JobCard key={j.job_id} j={j} onAction={onAction} />)}</div>

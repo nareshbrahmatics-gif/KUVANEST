@@ -10,7 +10,13 @@ import { Logo, FolderIcon } from "@/components/Brand";
 import { api, errMsg } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 
+const nextPath = () => {
+  const n = new URLSearchParams(window.location.search).get("next");
+  return n && n.startsWith("/") && !n.startsWith("//") ? n : "/home";
+};
+
 const googleLogin = () => {
+  sessionStorage.setItem("kn_next", nextPath());
   // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
   const redirectUrl = window.location.origin + "/home";
   window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
@@ -37,7 +43,7 @@ export default function Login() {
       const body = mode === "login" ? { email: form.email, password: form.password } : form;
       const { data } = await api.post(`/auth/${mode}`, body);
       setUser(data.user);
-      nav("/home");
+      nav(nextPath());
     } catch (err) { toast.error(errMsg(err)); } finally { setBusy(false); }
   };
 

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, FlatList, Alert, SafeAreaView, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, FlatList, Alert, SafeAreaView, StyleSheet, Switch, AppState } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as ImagePicker from "expo-image-picker";
 import { api, loadToken, saveToken, fileSource, fmtBytes } from "./src/api";
+import { runBackup, setBackupEnabled, getBackupState } from "./src/backup";
 
 const C = { blue: "#1F94C8", yellow: "#E5AA16", folder: "#FEF9E7", text: "#202124", muted: "#5F6368", bg: "#F7F7F7" };
 const TABS = ["Home", "Photos", "Files", "Transfer", "Account"];
@@ -95,10 +96,32 @@ const Transfer = () => (
   </View>
 );
 
+function AutoBackup() {
+  const [st, setSt] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const refresh = () => getBackupState().then(setSt);
+  useEffect(() => { refresh(); }, []);
+  const toggle = async (on) => { try { await setBackupEnabled(on); refresh(); } catch (e) { Alert.alert("Backup", e.message); } };
+  const now = async () => { setBusy(true); const n = await runBackup(); setBusy(false); refresh(); Alert.alert("Backup", n ? `${n} new item(s) backed up` : "Everything is already backed up"); };
+  if (!st) return null;
+  return (
+    <View style={s.card}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <Text style={s.folderName}>Automatic photo backup</Text>
+        <Switch value={st.enabled} onValueChange={toggle} trackColor={{ true: C.blue }} />
+      </View>
+      <Text style={[s.muted, { marginTop: 6 }]}>New camera photos and videos are uploaded when you open the app, and in the background whenever your phone allows it (usually every 15+ minutes on Wi-Fi/charging).</Text>
+      {st.lastRun ? <Text style={[s.muted, { marginTop: 6 }]}>Last backup: {new Date(st.lastRun).toLocaleString("en-IN")}</Text> : null}
+      {st.enabled && <TouchableOpacity style={s.yellowBtn} onPress={now} disabled={busy}><Text style={s.btnText}>{busy ? "Backing up…" : "Back up now"}</Text></TouchableOpacity>}
+    </View>
+  );
+}
+
 function Account({ user, onLogout }) {
   return (
     <View style={s.pad}>
       <Text style={s.h1}>{user.name}</Text><Text style={s.muted}>{user.email} · {user.plan_id} plan</Text>
+      <AutoBackup />
       <TouchableOpacity style={[s.yellowBtn, { backgroundColor: C.bg, marginTop: 24 }]} onPress={onLogout}><Text style={s.btnText}>Log out</Text></TouchableOpacity>
     </View>
   );
@@ -109,6 +132,12 @@ export default function App() {
   const [tab, setTab] = useState("Home");
   const [folder, setFolder] = useState(null);
   useEffect(() => { loadToken().then((t) => (t ? api("/auth/me").then(setUser).catch(() => setUser(null)) : setUser(null))); }, []);
+  useEffect(() => {
+    if (!user) return;
+    runBackup().catch(() => {});
+    const sub = AppState.addEventListener("change", (st) => st === "active" && runBackup().catch(() => {}));
+    return () => sub.remove();
+  }, [user]);
   const logout = async () => { await api("/auth/logout", { method: "POST" }).catch(() => {}); await saveToken(null); setUser(null); };
   if (user === undefined) return <View style={s.center} />;
   if (!user) return <Login onLogin={setUser} />;
@@ -148,6 +177,7 @@ const s = StyleSheet.create({
   photo: { width: "33%", aspectRatio: 1, margin: "0.15%" },
   row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 14, borderBottomWidth: 1, borderColor: "#eee" },
   rowText: { flex: 1, fontSize: 15, color: C.text },
+  card: { backgroundColor: C.bg, borderRadius: 16, padding: 16, marginTop: 20 },
   tabs: { flexDirection: "row", borderTopWidth: 1, borderColor: "#eee", paddingVertical: 6 },
   tab: { flex: 1, alignItems: "center", paddingVertical: 10, borderRadius: 12, marginHorizontal: 2 },
   tabActive: { backgroundColor: "#E8F4FA" },

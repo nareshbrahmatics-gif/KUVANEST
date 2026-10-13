@@ -6,9 +6,40 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./assets/icon.png",
-    "splash": { "image": "./assets/icon.png", "resizeMode": "contain", "backgroundColor": "#1F94C8" },
-    "ios": { "bundleIdentifier": "com.kuvanest.app", "infoPlist": { "NSPhotoLibraryUsageDescription": "KuvaNest backs up the photos you choose." } },
-    "android": { "package": "com.kuvanest.app", "adaptiveIcon": { "foregroundImage": "./assets/icon.png", "backgroundColor": "#1F94C8" } },
-    "extra": { "apiUrl": "https://nest-storage.preview.emergentagent.com/api" }
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1F94C8"
+    },
+    "ios": {
+      "bundleIdentifier": "com.kuvanest.app",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "KuvaNest backs up the photos you choose.",
+        "UIBackgroundModes": [
+          "fetch",
+          "processing"
+        ]
+      }
+    },
+    "android": {
+      "package": "com.kuvanest.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#1F94C8"
+      }
+    },
+    "extra": {
+      "apiUrl": "https://nest-storage.preview.emergentagent.com/api"
+    },
+    "plugins": [
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "KuvaNest backs up your photos and videos to your private storage.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],
+      "expo-background-task"
+    ]
   }
 }

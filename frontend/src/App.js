@@ -26,7 +26,7 @@ const Spinner = () => (
 function Protected({ children, admin }) {
   const { user, loading } = useAuth();
   if (loading) return <Spinner />;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to={`/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`} replace />;
   if (admin && user.role !== "admin") return <Navigate to="/home" replace />;
   return children;
 }
@@ -38,7 +38,7 @@ function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
-      <Route path="/login" element={!loading && user ? <Navigate to="/home" replace /> : <Login />} />
+      <Route path="/login" element={!loading && user ? <Navigate to={(new URLSearchParams(location.search).get("next") || "/home").replace(/^\/\/+/, "/")} replace /> : <Login />} />
       <Route path="/s/:token" element={<SharePage />} />
       <Route element={<Protected><AppLayout /></Protected>}>
         <Route path="/home" element={<HomePage />} />

@@ -15,7 +15,12 @@ export default function AuthCallback() {
     done.current = true;
     const sid = new URLSearchParams(location.hash.slice(1)).get("session_id");
     api.post("/auth/google/session", { session_id: sid })
-      .then(({ data }) => { setUser(data.user); navigate("/home", { replace: true }); })
+      .then(({ data }) => {
+        const next = sessionStorage.getItem("kn_next") || "/home";
+        sessionStorage.removeItem("kn_next");
+        setUser(data.user);
+        navigate(next, { replace: true });
+      })
       .catch((e) => { toast.error(errMsg(e)); navigate("/login", { replace: true }); });
   }, [location.hash, navigate, setUser]);
 
