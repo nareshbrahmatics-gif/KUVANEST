@@ -1,0 +1,28 @@
+{
+  "summary": "Iteration 3 end-to-end regression + new features. Backend: 71/71 pytest pass (56 preserved regression + 15 new) — Google import not-configured gates (status, oauth/start, drive/import, photos/session, picker-config all return correct 503, callback 400 on bad state), Family invite email via Emergent/Resend delivered@resend.dev returns email_sent=true, resend works for pending and 404 for non-pending/unknown, join-link flow with correct email auto-accepts & wrong email rejected. Frontend (public URL on desktop 1920 + mobile 390): logged-out /family?join=<id> redirects to /login?next=... (preserved and URL-encoded) → after login with the invited email the user lands on /family and the invite is auto-accepted (membership card visible, verified via /api/family too); external next value //evil.com correctly rejected and user lands on /home (stays in-app). Transfer page shows 'One-tap import from Google' card with data-testid=google-import-not-configured text 'Not set up yet — the admin needs to add Google API keys.' and 3 coming-soon items (Dropbox API, OneDrive Graph, Gmail). TransferAnimation (data-testid=transfer-animation) renders during ZIP upload (label 'Uploading TEST_takeout.zip to KuvaNest') and disappears once the resulting migration_job reaches completed; ZIP import still completes correctly (2/2 imported). Mobile 390px layout OK with bottom nav. Login brand logo, buttons, Family seats layout preserved from iter_2.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/backend/tests/test_family_billing_albums.py",
+    "/app/backend/tests/test_google_and_invites.py",
+    "/app/test_reports/pytest/pytest_iter3_full.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "google_import.py: oauth/start validates origin_url only startsWith https:// or http://localhost — acceptable for current flow, but no CSRF cookie binding beyond state nonce in Mongo (state expires in 10 min; find_one_and_delete prevents reuse — good).",
+    "google_import.py run_api_job: usage/quota check runs per-item (good) but token refresh happens once at job start; for a very long job the access_token could expire mid-run. Consider refreshing on 401. Non-blocking for small batches.",
+    "emailer.py _assert_safe_email is strong — forbids forms, non-https links, shorteners, credential-asking text. invite_email uses only https links from APP_URL — safe.",
+    "family.py invite: calls send_email in-request path which can add latency up to 30s timeout; consider BackgroundTasks for faster UX on invite button. Currently acceptable (<1s typical).",
+    "Family.jsx auto-accept uses setParams({}, {replace: true}) before awaiting the request — if the request errors or user refreshes mid-flight the join id is already gone from URL, so a reload would not retry. Minor UX nit, not blocking.",
+    "Login.jsx nextPath rejects '//' prefix correctly (confirmed with //evil.com — stays on /home). Good."
+  ],
+  "updated_files": ["/app/backend/tests/test_google_and_invites.py (new)"],
+  "success_rate": {"backend": "100% (71/71)", "frontend": "100% of flows tested"},
+  "test_credentials": "admin@kuvanest.com/Admin@12345, demo@kuvanest.com/Demo@12345 (Family plan owner), mem1@kuvanest.com/Member@123 — preserved per instructions.",
+  "seed_data_creation": "Tests create and clean up TEST_* users and TEST_joiner_* throwaway accounts, plus one delivered@resend.dev invite that is DELETE'd via /api/family/members/{id} at end of class. mem1 active + no leftover pending invites after run (confirmed by cleanup step).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "New test file: /app/backend/tests/test_google_and_invites.py (15 tests). Once Google OAuth keys are added to backend/.env (GOOGLE_CLIENT_ID/SECRET/API_KEY/PROJECT_NUMBER), the TestGoogleNotConfigured class expectations will flip — update assertions to expect 200 for /google/status (configured:true), and oauth/start returning a Google URL. Same test credentials still valid. TransferAnimation testids used: transfer-animation, transfer-animation-label; GoogleImport testids: google-import-card, google-import-not-configured, google-connect-btn, google-drive-pick-btn, google-photos-pick-btn, google-disconnect-btn.",
+  "rca of the issue": "No defects found this iteration. All planned iteration-3 features (Resend-powered family invite emails, one-tap join link with ?next= preservation + auto-accept, Google import not-configured gating with correct 503s, TransferAnimation during ZIP upload and background migration jobs) are implemented and verified end-to-end."
+}

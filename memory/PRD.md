@@ -28,6 +28,13 @@ React (CRA) + FastAPI + MongoDB. Backend modules: core.py (db, LocalObjectStorag
 - Smart Albums: trips (date clusters, folder-named) + months
 - /app/mobile Expo app (login, home folders, photo backup picker, photos, files, account); README repo layout
 
+## Iteration 3 (2026-06)
+- Family invite emails (Emergent-managed Resend) with one-tap join link /family?join=<id> (auto-accept after login; login keeps ?next=); Resend invite
+- Google Drive Picker + Google Photos Picker import (backend OAuth, Fernet-encrypted refresh token, background jobs via migration_jobs mode=api, Docs exported to Office formats). NOT CONFIGURED until GOOGLE_CLIENT_ID/SECRET/API_KEY/PROJECT_NUMBER added
+- Transfer animation (files flying from source cloud into yellow nest) during uploads/imports
+- Mobile: automatic camera backup (foreground + expo-background-task)
+- Landing tagline: India-first personal and enterprise sovereign cloud storage
+
 ## Backlog
 - P0: add Razorpay keys (live payments), Extreme Compute storage adapter
 - P1: Google Drive/Photos Picker connectors, business team seats, thumbnails/HEIC conversion, file versioning

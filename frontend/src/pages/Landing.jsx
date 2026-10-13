@@ -50,7 +50,7 @@ export default function Landing() {
 
       <section className="max-w-6xl mx-auto px-5 pt-14 pb-20 grid lg:grid-cols-[1.15fr_1fr] gap-14 items-center">
         <div className="kn-rise">
-          <p className="inline-flex items-center gap-2 rounded-full bg-[#E8F4FA] px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#156E96]">India-first personal cloud</p>
+          <p className="inline-flex items-center gap-2 rounded-full bg-[#E8F4FA] px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#156E96]">India-first personal and enterprise sovereign cloud storage</p>
           <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.05] mt-6">Your Files. Your Photos.<br /><span className="text-[#1F94C8]">Your Storage.</span> One Simple Nest.</h1>
           <p className="text-base md:text-lg text-[#5F6368] mt-6 max-w-xl">Simple yellow folders, automatic photo backup and easy moving from Google, iCloud and Dropbox — at honest Indian prices starting ₹100/month.</p>
           <div className="flex flex-wrap gap-3 mt-8">
