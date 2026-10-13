@@ -21,7 +21,14 @@ React (CRA) + FastAPI + MongoDB. Backend modules: core.py (db, LocalObjectStorag
 - Admin: stats/MRR, users (suspend), migrations, plan & GST config, payments, audit logs
 - Landing page with pricing & FAQ
 
+## Iteration 2 (2026-06)
+- New KuvaNest logo (white lotus on blue) + favicon; theme blue #1F94C8, folders & login buttons stay yellow
+- Razorpay checkout (order -> checkout.js -> server signature verify + payment fetch; webhook /api/razorpay/webhook with HMAC + event idempotency). Keys empty -> MOCK mode
+- Family sharing: invites (seats from plan), accept/decline, viewer/editor access, remove/leave, shared Family Files browse/upload/folder/delete using owner's quota
+- Smart Albums: trips (date clusters, folder-named) + months
+- /app/mobile Expo app (login, home folders, photo backup picker, photos, files, account); README repo layout
+
 ## Backlog
-- P0: real payments (Razorpay), Extreme Compute storage adapter, family member invites & shared folders
+- P0: add Razorpay keys (live payments), Extreme Compute storage adapter
 - P1: Google Drive/Photos Picker connectors, business team seats, thumbnails/HEIC conversion, file versioning
 - P2: React Native app & camera backup, Go device agent (KuvaNest Box), reseller portal, malware scanning
