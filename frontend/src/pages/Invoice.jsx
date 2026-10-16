@@ -20,7 +20,15 @@ export default function Invoice() {
   const { paymentId } = useParams();
   const [url, setUrl] = useState(null);
   const [err, setErr] = useState("");
-  useEffect(() => { fetchInvoiceUrl(paymentId).then(setUrl).catch((e) => setErr(errMsg(e))); }, [paymentId]);
+  useEffect(() => {
+    fetchInvoiceUrl(paymentId).then(setUrl).catch(async (e) => {
+      const blob = e?.response?.data;
+      if (blob instanceof Blob) {
+        try { return setErr(JSON.parse(await blob.text()).detail || errMsg(e)); } catch { /* fall through */ }
+      }
+      setErr(errMsg(e));
+    });
+  }, [paymentId]);
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -29,7 +37,10 @@ export default function Invoice() {
       </div>
       <h1 className="font-display text-3xl font-extrabold tracking-tight">GST invoice</h1>
       {err ? <div className="rounded-2xl bg-red-50 text-[#D93025] p-6" data-testid="invoice-error">{err}</div>
-        : url ? <iframe title="Invoice" src={url} className="w-full h-[75vh] rounded-2xl border" data-testid="invoice-frame" />
+        : url ? <>
+          <iframe title="Invoice" src={url} className="w-full h-[75vh] rounded-2xl border" data-testid="invoice-frame" />
+          <p className="text-sm text-[#5F6368]">PDF not showing? <a href={url} target="_blank" rel="noreferrer" className="font-semibold text-[#156E96] underline" data-testid="invoice-open-link">Open PDF</a></p>
+        </>
         : <div className="h-64 flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#1F94C8]" /></div>}
     </div>
   );

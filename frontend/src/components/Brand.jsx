@@ -14,6 +14,6 @@ export const Logo = ({ compact = false, light = false }) => (
     <div className="w-10 h-10 rounded-xl bg-[#1F94C8] flex items-center justify-center shadow-[0_6px_16px_-6px_rgba(31,148,200,.7)]">
       <img src="/brand/kuvanest-mark.png" alt="" className="w-6 h-6 object-contain" />
     </div>
-    {!compact && <span className={`font-display font-extrabold text-xl tracking-[0.18em] ${light ? "text-white" : "text-[#1F94C8]"}`}>KUVANEST</span>}
+    {!compact && <span className={`font-display font-extrabold text-lg tracking-[0.14em] ${light ? "text-white" : "text-[#1F94C8]"}`}>KUVANEST</span>}
   </div>
 );

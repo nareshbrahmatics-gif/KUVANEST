@@ -1,0 +1,45 @@
+{
+  "summary": "Iteration 5: tested payment receipts + GST invoice PDF, /api/cron/daily auth/idempotency, renewal reminders, storage alerts (80/95/reset), notifications API and notification bell UI (desktop + 390px mobile), plus regression. New suite tests/test_notifications_cron_invoice.py: 13/14 pass under xdist, 14/14 when run serially. Full suite 90/94; the other 3 failures are environmental (email provider 429 so email_sent=False, and an import job still queued when the 60s wait ran out; all import jobs finished later). UI: badge count, panel, mark-all-read (badge stays hidden after reload), payment notification -> /invoice/<id>, invoice-frame (blob iframe), Download PDF, Plans invoice-pdf-<id> download, invoice-error for an unknown id, storage-alert banner at 84% (amber) and 96% (red), mobile bell with no horizontal overflow (scrollWidth 390). Admin smoke: all main routes load with no page errors.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/cron/daily -> renewal_reminders", "issue": "Duplicate renewal reminder if two daily jobs overlap. The renewal_reminder_for marker is written only AFTER notify + safe_email, and safe_email can take ~10s when retrying on 429. A second cron run (different X-Webhook-Id) during that window sends the reminder again. Reproduced: 2 'renewal' notifications for one user. Fix: claim the reminder atomically BEFORE notifying, e.g. update_one({user_id, renewal_reminder_for: {$ne: rd}}, {$set: {renewal_reminder_for: rd}}) and only notify if modified_count == 1. Optionally also lock daily_job so only one run happens at a time."},
+      {"endpoint": "check_storage_alert", "issue": "Same read-then-write race: concurrent uploads (several schedule_storage_check tasks) can each read the old prev level and notify twice. Use a conditional update ({user_id, storage_alert_level: prev} -> level) and notify only if modified."},
+      {"endpoint": "POST /api/cron/daily", "issue": "Returns 400 'Invalid body' when the request has no JSON body. Fine if the platform always sends a JSON envelope; otherwise the cron is rejected. Consider making the body optional."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "NotificationBell", "issue": "Popover stays open after clicking a notification item (it navigates, but the panel still covers the page on desktop and mobile). Make the Popover controlled (open state) and close it on item click.", "selector": "[data-testid=notification-panel] button", "priority": "MEDIUM"},
+      {"component": "Invoice page", "issue": "Unknown or forbidden invoice shows the generic 'Something went wrong. Please try again.' instead of 'Invoice not found'. responseType 'blob' turns the error body into a Blob, so errMsg cannot read detail. Parse the error blob as JSON (await e.response.data.text()) or handle 404 explicitly.", "selector": "[data-testid=invoice-error]", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Desktop sidebar header", "issues": ["The bell sits tight against the KUVANEST wordmark, and the red unread badge overlaps the last letter 'T'. Add a gap or move the bell."]},
+      {"screen": "Plans invoice table", "issues": ["PDF button only shows for status 'paid', but the backend also serves invoices for 'refunded' payments."]},
+      {"screen": "Invoice page", "issues": ["The PDF iframe renders blank in headless Chromium, which cannot display PDFs inline. The blob URL is valid and the download works. Please verify manually in a real browser; mobile Safari/Chrome often don't render PDF iframes, so consider a fallback 'Open PDF' link."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_notifications_cron_invoice.py", "/app/backend/tests/ui_seed_iter5.py", "/app/test_reports/pytest/pytest_iter5.xml", "/app/test_reports/pytest/pytest_all_iter5.xml"],
+  "action_items": [
+    "Make renewal reminders idempotent by claiming renewal_reminder_for atomically before notify/email (duplicate reproduced with overlapping cron runs)",
+    "Make storage alert level transitions atomic (conditional update) to avoid duplicate alerts from concurrent uploads",
+    "Close the notification popover on item click (controlled Popover)",
+    "Show the real 404 message on the Invoice page (parse the blob error)",
+    "Fix spacing between the bell badge and the logo in the desktop sidebar"
+  ],
+  "critical_code_review_comments": [
+    "notifications.py renewal_reminders: marker set after slow email causes duplicates; also re-reads settings for every user inside the loop (move it outside)",
+    "daily_job runs check_storage_alert one user at a time, each doing its own usage aggregation; this won't scale. Consider one $group aggregate over all users.",
+    "NotificationBell onOpen runs read-all and load() at the same time; load can resolve with the pre-read unread count. Not seen in testing, but sequencing them (await read-all, then load) is safer.",
+    "usage_bytes counts files in the Recycle Bin (deleted_at set) toward quota and alerts. Probably intentional, but tell users so.",
+    "send_receipt only sets receipt_sent_at when the email succeeds, yet nothing retries a receipt that wasn't sent, so a 429 means no receipt email is ever sent (the in-app notification still exists)."
+  ],
+  "updated_files": ["/app/backend/tests/test_notifications_cron_invoice.py", "/app/backend/tests/ui_seed_iter5.py"],
+  "success_rate": {"backend": "93% (13/14 new; 1 real race bug)", "frontend": "90% (all flows work; popover-stays-open bug)"},
+  "seed_data_creation": "Throwaway users delivered+kn*@resend.dev (TEST names). UI user delivered+knui1792141962@resend.dev / Passw0rd!23 on the starter plan, payment pay_3e252f1a6a984097. Fake large file docs (file_TESTfake*) and TEST_run_* cron_runs were removed.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run the new suite serially for deterministic results: pytest tests/test_notifications_cron_invoice.py -p no:xdist -o addopts=''. pytest.ini uses xdist loadscope, so the TestCron and TestRenewal cron triggers can overlap and expose the renewal race. Email 429s are common and make test_resend_pending and the import retry tests flaky. Cron secret is read from /app/backend/.env.",
+  "rca of the issue": "Duplicate renewal reminder: renewal_reminders reads users where renewal_reminder_for != renewal_date, then awaits notify() and safe_email(). With 429 backoff that takes ~10s, and only then sets renewal_reminder_for. A second daily_job started in that window (another cron id) reads the same unmarked user and notifies again. Repro: set renewal_date to now+2d, POST /api/cron/daily with id A, wait for the notification, POST again with id B within ~5s, and the user has 2 renewal notifications. Mitigation: claim with a conditional update_one before sending."
+}

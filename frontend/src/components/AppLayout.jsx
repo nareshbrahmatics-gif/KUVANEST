@@ -37,7 +37,7 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen bg-white">
       <aside className="hidden md:flex fixed inset-y-0 left-0 w-64 flex-col border-r border-gray-100 bg-white px-4 py-6 z-40">
-        <div className="flex items-center justify-between mb-8 pl-3"><Link to="/home"><Logo /></Link><NotificationBell testId="sidebar-notification-bell" /></div>
+        <div className="flex items-center justify-between gap-2 mb-8 pl-1"><Link to="/home"><Logo /></Link><NotificationBell testId="sidebar-notification-bell" /></div>
         <nav className="flex flex-col gap-1">{links.map((l) => <SideLink key={l.to} {...l} />)}</nav>
         <div className="mt-auto px-3 text-xs text-[#80868B]">Your Files. Your Photos.<br />Your Storage. One Simple Nest.</div>
       </aside>

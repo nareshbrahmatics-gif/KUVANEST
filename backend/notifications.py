@@ -1,5 +1,6 @@
 import io
 import os
+import json
 import asyncio
 import logging
 from datetime import datetime, timedelta
@@ -77,8 +78,9 @@ async def check_storage_alert(user_id):
         prev = user.get("storage_alert_level", 0)
         if level == prev:
             return
-        await db.users.update_one({"user_id": user_id}, {"$set": {"storage_alert_level": level}})
-        if level < prev:
+        prev_q = {"$in": [0, None]} if not prev else prev
+        r = await db.users.update_one({"user_id": user_id, "storage_alert_level": prev_q}, {"$set": {"storage_alert_level": level}})
+        if not r.modified_count or level < prev:
             return
         title = f"Your KuvaNest storage is {int(pct)}% full"
         body = ("You're almost out of space. New uploads and backups will stop when storage is full."
@@ -169,10 +171,12 @@ async def renewal_reminders():
     cur = db.users.find({"renewal_date": {"$ne": None, "$gt": iso(t), "$lte": iso(t + timedelta(days=3))},
                          "cancel_at_period_end": {"$ne": True}}, {"_id": 0})
     async for u in cur:
-        if u.get("renewal_reminder_for") == u["renewal_date"]:
-            continue
         plan = await db.plans.find_one({"plan_id": u.get("plan_id")}, {"_id": 0})
         if not plan or plan["price"] <= 0:
+            continue
+        claim = await db.users.update_one({"user_id": u["user_id"], "renewal_reminder_for": {"$ne": u["renewal_date"]}},
+                                          {"$set": {"renewal_reminder_for": u["renewal_date"]}})
+        if not claim.modified_count:
             continue
         s = await db.settings.find_one({"key": "billing"}, {"_id": 0}) or {}
         total = round(plan["price"] * (1 + s.get("gst_percent", 18) / 100), 2)
@@ -183,10 +187,19 @@ async def renewal_reminders():
                   "You can change or cancel your plan any time before then.")
         await notify(u["user_id"], "renewal", title, f"₹{total:,.2f} incl. GST on {when}.", "/plans")
         await safe_email(to=u["email"], subject=title, html=_wrap(title, body, "Manage my plan", app_url("/plans")))
-        await db.users.update_one({"user_id": u["user_id"]}, {"$set": {"renewal_reminder_for": u["renewal_date"]}})
+
+
+DAILY_LOCK = asyncio.Lock()
 
 
 async def daily_job():
+    if DAILY_LOCK.locked():
+        return
+    async with DAILY_LOCK:
+        await _daily_job()
+
+
+async def _daily_job():
     try:
         await renewal_reminders()
         async for u in db.users.find({"status": {"$ne": "suspended"}}, {"_id": 0, "user_id": 1}):
@@ -202,9 +215,10 @@ async def cron_daily(request: Request):
     secret = os.environ.get("WEBHOOK_CRON_SECRET", "")
     if not secret or not auth.startswith("Bearer ") or not hmac.compare_digest(auth[7:], secret):
         raise HTTPException(401, "Unauthorized")
+    raw = await request.body()
     try:
-        env = await request.json()
-    except Exception:
+        env = json.loads(raw) if raw.strip() else {}
+    except ValueError:
         raise HTTPException(400, "Invalid body")
     run_id = request.headers.get("X-Webhook-Id") or (env or {}).get("run_id") or new_id("run")
     try:

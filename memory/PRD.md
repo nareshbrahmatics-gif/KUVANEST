@@ -41,6 +41,14 @@ React (CRA) + FastAPI + MongoDB. Backend modules: core.py (db, LocalObjectStorag
 - Mobile backup: Only on Wi-Fi (default) / Only while charging options
 - Still waiting on user: Google keys, Razorpay keys, Extreme Compute details
 
+## Iteration 5 (2026-06)
+- GST invoice PDF (reportlab) /api/billing/invoices/{id}/pdf + /invoice/:id page + PDF column; receipt email (link, no attachments supported) + notification on every paid payment
+- In-app notifications (bell, unread badge) for payments, renewals, storage, imports
+- Storage alerts at 80%/95% (atomic level transitions) via uploads/imports/plan changes/daily cron; banner on storage card
+- Daily cron .emergent/crons.yml -> /api/cron/daily 9:30 IST (renewal reminders 3 days ahead, atomic claim; storage sweep)
+- Mobile backup live progress "X of Y photos & videos backed up"
+- Seller invoice details via env INVOICE_SELLER_NAME / INVOICE_ADDRESS / INVOICE_GSTIN (GSTIN pending)
+
 ## Backlog
 - P0: add Razorpay keys (live payments), Extreme Compute storage adapter
 - P1: Google Drive/Photos Picker connectors, business team seats, thumbnails/HEIC conversion, file versioning
