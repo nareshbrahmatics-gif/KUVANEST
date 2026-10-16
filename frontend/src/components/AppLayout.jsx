@@ -2,6 +2,7 @@ import { NavLink, Outlet, Link } from "react-router-dom";
 import { Home, Image, FolderOpen, ArrowLeftRight, UserRound, Trash2, CreditCard, ShieldCheck, Users } from "lucide-react";
 import { Logo } from "@/components/Brand";
 import { useAuth } from "@/context/AuthContext";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const NAV = [
   { to: "/home", label: "Home", icon: Home },
@@ -36,14 +37,15 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen bg-white">
       <aside className="hidden md:flex fixed inset-y-0 left-0 w-64 flex-col border-r border-gray-100 bg-white px-4 py-6 z-40">
-        <Link to="/home" className="px-3 mb-8"><Logo /></Link>
+        <div className="flex items-center justify-between mb-8 pl-3"><Link to="/home"><Logo /></Link><NotificationBell testId="sidebar-notification-bell" /></div>
         <nav className="flex flex-col gap-1">{links.map((l) => <SideLink key={l.to} {...l} />)}</nav>
         <div className="mt-auto px-3 text-xs text-[#80868B]">Your Files. Your Photos.<br />Your Storage. One Simple Nest.</div>
       </aside>
 
       <header className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 h-16 bg-white/90 backdrop-blur-md border-b border-gray-100">
-        <Link to="/home"><Logo /></Link>
-        <div className="flex items-center gap-1">
+        <Link to="/home"><Logo compact /></Link>
+        <div className="flex items-center gap-0.5">
+          <NotificationBell testId="mobile-notification-bell" />
           {EXTRA.concat(user?.role === "admin" ? [{ to: "/admin", label: "Admin", icon: ShieldCheck }] : []).map(({ to, label, icon: Icon }) => (
             <Link key={to} to={to} aria-label={label} data-testid={`mobile-header-${label.toLowerCase().replace(/[^a-z]+/g, "-")}`}
               className="w-11 h-11 rounded-xl flex items-center justify-center text-[#5F6368] hover:bg-[#F7F7F7]">

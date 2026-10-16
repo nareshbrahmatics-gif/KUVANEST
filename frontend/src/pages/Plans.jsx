@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Check, Loader2, AlertTriangle, QrCode, CreditCard } from "lucide-react";
+import { Check, Loader2, AlertTriangle, QrCode, CreditCard, FileDown } from "lucide-react";
+import { downloadInvoice } from "@/pages/Invoice";
 import { UpiQr } from "@/components/UpiQr";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -95,8 +96,8 @@ export default function Plans() {
       <section>
         <h2 className="font-display text-lg font-bold mb-4">Invoice history</h2>
         {b?.invoices.length ? <div className="overflow-x-auto rounded-2xl border border-gray-100"><table className="w-full text-sm" data-testid="invoice-table">
-          <thead className="bg-[#F7F7F7] text-left text-[#5F6368]"><tr>{["Invoice", "Date", "Plan", "Amount", "GST", "Total", "Status"].map((h) => <th key={h} className="px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
-          <tbody>{b.invoices.map((i) => <tr key={i.payment_id} className="border-t border-gray-100"><td className="px-4 py-3 font-mono text-xs">{i.invoice_no}</td><td className="px-4 py-3">{fmtDate(i.created_at)}</td><td className="px-4 py-3">{i.plan_name}</td><td className="px-4 py-3">{inr(i.amount)}</td><td className="px-4 py-3">{inr(i.gst)}</td><td className="px-4 py-3 font-semibold">{inr(i.total)}</td><td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs font-bold capitalize ${i.status === "paid" ? "bg-green-50 text-[#1E8E3E]" : "bg-red-50 text-[#D93025]"}`}>{i.status}{i.provider === "mock" ? " (mock)" : ""}</span></td></tr>)}</tbody>
+          <thead className="bg-[#F7F7F7] text-left text-[#5F6368]"><tr>{["Invoice", "Date", "Plan", "Amount", "GST", "Total", "Status", "PDF"].map((h) => <th key={h} className="px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
+          <tbody>{b.invoices.map((i) => <tr key={i.payment_id} className="border-t border-gray-100"><td className="px-4 py-3 font-mono text-xs">{i.invoice_no}</td><td className="px-4 py-3">{fmtDate(i.created_at)}</td><td className="px-4 py-3">{i.plan_name}</td><td className="px-4 py-3">{inr(i.amount)}</td><td className="px-4 py-3">{inr(i.gst)}</td><td className="px-4 py-3 font-semibold">{inr(i.total)}</td><td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs font-bold capitalize ${i.status === "paid" ? "bg-green-50 text-[#1E8E3E]" : "bg-red-50 text-[#D93025]"}`}>{i.status}{i.provider === "mock" ? " (mock)" : ""}</span></td><td className="px-4 py-3">{i.status === "paid" && <button onClick={() => downloadInvoice(i.payment_id, i.invoice_no).catch(() => toast.error("Could not download invoice"))} data-testid={`invoice-pdf-${i.payment_id}`} className="inline-flex items-center gap-1 text-[#156E96] font-semibold"><FileDown className="w-4 h-4" />PDF</button>}</td></tr>)}</tbody>
         </table></div> : <div className="rounded-2xl bg-[#F7F7F7] p-8 text-center text-[#5F6368]">No invoices yet.</div>}
       </section>
 

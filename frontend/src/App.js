@@ -18,6 +18,7 @@ import Admin from "@/pages/Admin";
 import SharePage from "@/pages/SharePage";
 import Family from "@/pages/Family";
 import FamilyShared from "@/pages/FamilyShared";
+import Invoice from "@/pages/Invoice";
 
 const Spinner = () => (
   <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#E5AA16]" /></div>
@@ -50,6 +51,7 @@ function AppRouter() {
         <Route path="/plans" element={<Plans />} />
         <Route path="/account" element={<Account />} />
         <Route path="/family" element={<Family />} />
+        <Route path="/invoice/:paymentId" element={<Invoice />} />
         <Route path="/family/:ownerId" element={<FamilyShared />} />
         <Route path="/family/:ownerId/:folderId" element={<FamilyShared />} />
         <Route path="/admin" element={<Protected admin><Admin /></Protected>} />

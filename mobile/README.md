@@ -22,4 +22,5 @@ Set the API URL in `app.json` → `expo.extra.apiUrl` (e.g. `https://api.kuvanes
 - Google sign-in on mobile, archive upload from phone, store billing.
 
 ## Automatic backup
+Live progress ("12 of 40 photos & videos backed up") shows on Home and Account while a backup runs.
 Account → Automatic photo backup. Uploads new photos/videos on app open and via `expo-background-task` (OS-scheduled, min 15 min; iOS/Android decide actual timing). Options: **Only on Wi-Fi** (default on) and **Only while charging**; "Back up now" ignores them. Needs a development build (`npx expo run:android` / `run:ios`) — background tasks don't run in Expo Go.

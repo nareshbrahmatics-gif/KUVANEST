@@ -32,43 +32,65 @@ export async function blockedReason({ wifiOnly, chargingOnly }) {
   return null;
 }
 
+const listeners = new Set();
+let progress = { running: false, done: 0, total: 0, failed: 0 };
+const emit = (p) => { progress = { ...progress, ...p }; listeners.forEach((fn) => fn(progress)); };
+export const subscribeProgress = (fn) => { listeners.add(fn); fn(progress); return () => listeners.delete(fn); };
+
+const pending = async (last, first) => MediaLibrary.getAssetsAsync({
+  mediaType: [MediaLibrary.MediaType.photo, MediaLibrary.MediaType.video],
+  sortBy: [[MediaLibrary.SortBy.creationTime, true]],
+  createdAfter: last || undefined,
+  first,
+});
+
 // Uploads photos/videos created after the last synced one, oldest first, so an interrupted run resumes cleanly.
-export async function runBackup({ force = false } = {}) {
+// Foreground runs drain everything; background runs do one batch (OS time limits).
+export async function runBackup({ force = false, background = false } = {}) {
+  if (progress.running) return 0;
   const st = await getBackupState();
-  const { enabled, last } = st;
-  if (!enabled || !(await loadToken())) return 0;
+  if (!st.enabled || !(await loadToken())) return 0;
   if (!force && (await blockedReason(st))) return 0;
-  const perm = await MediaLibrary.getPermissionsAsync();
-  if (!perm.granted) return 0;
-  const page = await MediaLibrary.getAssetsAsync({
-    mediaType: [MediaLibrary.MediaType.photo, MediaLibrary.MediaType.video],
-    sortBy: [[MediaLibrary.SortBy.creationTime, true]],
-    createdAfter: last || undefined,
-    first: BATCH,
-  });
-  let done = 0;
-  for (const a of page.assets) {
-    const info = await MediaLibrary.getAssetInfoAsync(a);
-    const uri = info.localUri || a.uri;
-    const form = new FormData();
-    form.append("files", { uri, name: a.filename, type: a.mediaType === "video" ? "video/mp4" : "image/jpeg" });
-    form.append("auto", "true");
-    try {
-      await api("/files/upload", { method: "POST", form });
-    } catch (e) {
-      if (/Storage full/i.test(e.message)) break;
-      continue;
+  if (!(await MediaLibrary.getPermissionsAsync()).granted) return 0;
+  let last = st.last;
+  let done = 0, failed = 0;
+  const first = await pending(last, BATCH);
+  if (!first.assets.length) { emit({ running: false, done: 0, total: 0, failed: 0 }); return 0; }
+  emit({ running: true, done: 0, total: first.totalCount, failed: 0 });
+  let page = first;
+  try {
+    while (page.assets.length) {
+      for (const a of page.assets) {
+        if (!force && (await blockedReason(st))) return done;
+        const info = await MediaLibrary.getAssetInfoAsync(a);
+        const form = new FormData();
+        form.append("files", { uri: info.localUri || a.uri, name: a.filename, type: a.mediaType === "video" ? "video/mp4" : "image/jpeg" });
+        form.append("auto", "true");
+        try {
+          await api("/files/upload", { method: "POST", form });
+          done++;
+        } catch (e) {
+          if (/Storage full/i.test(e.message)) return done;
+          failed++;
+        }
+        last = a.creationTime;
+        await SecureStore.setItemAsync("kn_backup_last", String(last));
+        emit({ done, failed });
+      }
+      if (background) break;
+      page = await pending(last, BATCH);
+      emit({ total: done + failed + page.totalCount });
     }
-    await SecureStore.setItemAsync("kn_backup_last", String(a.creationTime));
-    done++;
+  } finally {
+    await SecureStore.setItemAsync("kn_backup_ran", String(Date.now()));
+    emit({ running: false });
   }
-  await SecureStore.setItemAsync("kn_backup_ran", String(Date.now()));
   return done;
 }
 
 TaskManager.defineTask(BACKUP_TASK, async () => {
   try {
-    await runBackup();
+    await runBackup({ background: true });
     return BackgroundTask.BackgroundTaskResult.Success;
   } catch {
     return BackgroundTask.BackgroundTaskResult.Failed;

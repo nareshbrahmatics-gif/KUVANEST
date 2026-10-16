@@ -1,11 +1,13 @@
 import os
 import re
+import asyncio
 import hmac
 import json
 import hashlib
 from datetime import timedelta
 import razorpay
 from pymongo.errors import DuplicateKeyError
+from notifications import send_receipt, schedule_storage_check
 from typing import Optional, List
 from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel, Field
@@ -94,6 +96,7 @@ async def activate_plan(user_id, plan_id):
         "plan_id": plan["plan_id"], "cancel_at_period_end": False,
         "renewal_date": iso(now() + timedelta(days=30)) if plan["price"] > 0 else None}})
     await audit(user_id, "billing.change_plan", {"from": old["plan_id"], "to": plan["plan_id"]})
+    schedule_storage_check(user_id)
     return "upgrade" if plan["price"] > old["price"] else "downgrade"
 
 
@@ -105,6 +108,7 @@ async def mark_paid(order_id, payment_id=None, method=None, field="razorpay_orde
     pay = await db.payments.find_one_and_update({field: order_id, "status": "created"}, {"$set": upd})
     if pay:
         await activate_plan(pay["user_id"], pay["plan_id"])
+        asyncio.create_task(send_receipt(pay["payment_id"]))
     return await db.payments.find_one({field: order_id}, {"_id": 0, "user_id": 0})
 
 
@@ -114,9 +118,10 @@ async def subscribe(body: SubIn, user=Depends(get_current_user)):
     if plan["price"] > 0 and rzp_client():
         raise HTTPException(400, "Use Razorpay checkout for paid plans")
     pay = await new_payment(user["user_id"], plan, body.method, "mock", "paid")
+    direction = await activate_plan(user["user_id"], plan["plan_id"])
     if plan["price"] > 0:
         await db.payments.insert_one(dict(pay))
-    direction = await activate_plan(user["user_id"], plan["plan_id"])
+        asyncio.create_task(send_receipt(pay["payment_id"]))
     pay.pop("user_id")
     return {"ok": True, "payment": pay, "direction": direction}
 

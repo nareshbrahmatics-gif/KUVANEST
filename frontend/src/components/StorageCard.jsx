@@ -33,6 +33,11 @@ export const StorageCard = ({ s }) => {
           <div key={k} style={{ width: `${s.quota ? (part(k) / s.quota) * 100 : 0}%`, background: c, minWidth: part(k) ? 3 : 0 }} />
         ))}
       </div>
+      {pct >= 80 && (
+        <div className={`relative mt-4 rounded-xl px-4 py-2.5 text-sm font-semibold ${pct >= 95 ? "bg-[#D93025] text-white" : "bg-[#E5AA16] text-[#202124]"}`} data-testid="storage-alert">
+          {pct >= 95 ? `Storage almost full (${Math.floor(pct)}%). Uploads will stop soon.` : `You've used ${Math.floor(pct)}% of your storage.`} <Link to="/plans" className="underline">Get more space</Link>
+        </div>
+      )}
       <div className="relative mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
         <span className="font-semibold text-[#7CCBEF]" data-testid="storage-available">{fmtBytes(s.available)} available</span>
         {SEG.filter(({ k }) => part(k) > 0).map(({ k, label, c }) => (

@@ -10,11 +10,12 @@ from billing_admin import router as billing_router, seed_plans
 from family import router as family_router
 from albums import router as albums_router
 from google_import import router as google_router
+from notifications import router as notify_router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 app = FastAPI(title="KuvaNest API")
 
-for r in (auth_router, file_router, migration_router, billing_router, family_router, albums_router, google_router):
+for r in (auth_router, file_router, migration_router, billing_router, family_router, albums_router, google_router, notify_router):
     app.include_router(r)
 
 
@@ -46,6 +47,8 @@ async def startup():
     await db.webhook_events.create_index("event_id", unique=True)
     await db.family_members.create_index([("owner_id", 1), ("status", 1)])
     await db.google_oauth_states.create_index("state", unique=True)
+    await db.cron_runs.create_index("run_id", unique=True)
+    await db.notifications.create_index([("user_id", 1), ("created_at", -1)])
     await seed_plans()
     await seed_users()
     await resume_pending()

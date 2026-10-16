@@ -5,6 +5,7 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
+from notifications import schedule_storage_check
 from core import (db, storage, now, iso, new_id, get_current_user, ensure_quota, usage_bytes, quota_bytes,
                   get_plan, find_duplicate, file_doc, public_file, create_default_folders, audit, file_kind, system_folder)
 
@@ -196,6 +197,7 @@ async def upload(files: List[UploadFile] = File(...), folder_id: Optional[str] =
         await db.files.insert_one(dict(doc))
         results.append({"name": up.filename, "status": "uploaded", "file": public_file(doc)})
     await audit(uid, "files.upload", {"count": len(files)})
+    schedule_storage_check(uid)
     return {"results": results}
 
 

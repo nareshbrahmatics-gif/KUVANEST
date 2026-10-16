@@ -1,4 +1,5 @@
 import os
+import asyncio
 import re
 import ipaddress
 import logging
@@ -89,7 +90,11 @@ async def send_email(*, to, subject, html):
         payload["contact_email"] = os.environ["EMAIL_REPLY_TO"]
     try:
         async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.post(f"{EMAIL_BASE_URL}/api/v1/email/send", headers={"X-Email-Key": os.environ["EMERGENT_EMAIL_KEY"]}, json=payload)
+            for attempt in range(3):
+                r = await c.post(f"{EMAIL_BASE_URL}/api/v1/email/send", headers={"X-Email-Key": os.environ["EMERGENT_EMAIL_KEY"]}, json=payload)
+                if r.status_code != 429:
+                    break
+                await asyncio.sleep(2 * (attempt + 1))
         r.raise_for_status()
         return r.json().get("id")
     except httpx.HTTPStatusError as e:
@@ -150,6 +155,12 @@ def import_done_email(name, job, link):
 
 async def notify_import_done(db, job_id):
     try:
+        from notifications import check_storage_alert, notify
+        job = await db.migration_jobs.find_one({"job_id": job_id}, {"_id": 0, "items": 0})
+        await check_storage_alert(job["user_id"])
+        await notify(job["user_id"], "import", f"{job.get('source_label') or 'Archive'} import {job['status']}",
+                     f"{job.get('imported', 0)} imported · {job.get('duplicates', 0)} duplicates · {job.get('failed', 0)} failed",
+                     f"/files/{job['dest_folder_id']}" if job.get("dest_folder_id") else "/transfer")
         await _notify_import_done(db, job_id)
     except Exception:
         log.exception("import-done email failed for %s", job_id)

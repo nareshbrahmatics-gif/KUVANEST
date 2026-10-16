@@ -4,6 +4,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, EmailStr, Field
 import os
 from emailer import send_email, invite_email
+from notifications import schedule_storage_check
 from core import (db, storage, iso, new_id, get_current_user, ensure_quota, get_plan, find_duplicate, file_doc,
                   public_file, system_folder, audit)
 
@@ -182,6 +183,7 @@ async def shared_upload(owner_id: str, files: List[UploadFile] = File(...), fold
         doc = {**file_doc(owner_id, folder["folder_id"], up.filename or "untitled", size, sha, key, source="family"), "uploaded_by": user["user_id"]}
         await db.files.insert_one(dict(doc))
         results.append({"name": up.filename, "status": "uploaded", "file": public_file(doc)})
+    schedule_storage_check(owner_id)
     return {"results": results}
 
 

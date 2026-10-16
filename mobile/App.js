@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, FlatList, A
 import { StatusBar } from "expo-status-bar";
 import * as ImagePicker from "expo-image-picker";
 import { api, loadToken, saveToken, fileSource, fmtBytes } from "./src/api";
-import { runBackup, setBackupEnabled, getBackupState, setBackupOption, blockedReason } from "./src/backup";
+import { runBackup, setBackupEnabled, getBackupState, setBackupOption, blockedReason, subscribeProgress } from "./src/backup";
 
 const C = { blue: "#1F94C8", yellow: "#E5AA16", folder: "#FEF9E7", text: "#202124", muted: "#5F6368", bg: "#F7F7F7" };
 const TABS = ["Home", "Photos", "Files", "Transfer", "Account"];
@@ -52,6 +52,7 @@ function Home({ user, open }) {
         <Text style={s.big}>{fmtBytes(st.used)}</Text>
         <Text style={{ color: "#fff" }}>of {fmtBytes(st.quota)} used · {fmtBytes(st.available)} available</Text>
       </View>
+      <BackupProgress />
       <TouchableOpacity style={s.yellowBtn} onPress={() => pickAndUpload(load)}><Text style={s.btnText}>Back up photos</Text></TouchableOpacity>
       <Text style={s.h2}>My Folders</Text>
       <View style={s.grid}>
@@ -96,6 +97,21 @@ const Transfer = () => (
   </View>
 );
 
+function BackupProgress() {
+  const [p, setP] = useState(null);
+  useEffect(() => subscribeProgress(setP), []);
+  if (!p || (!p.running && !p.total)) return null;
+  const pct = p.total ? Math.min(100, Math.round(((p.done + p.failed) / p.total) * 100)) : 0;
+  const kind = "photos & videos";
+  return (
+    <View style={s.progress}>
+      <Text style={s.progressText}>{p.running ? `${p.done} of ${p.total} ${kind} backed up` : `Backup complete · ${p.done} of ${p.total} ${kind} backed up`}</Text>
+      <View style={s.bar}><View style={[s.barFill, { width: `${pct}%` }]} /></View>
+      {p.failed > 0 && <Text style={[s.muted, { marginTop: 4 }]}>{p.failed} item(s) will retry next time</Text>}
+    </View>
+  );
+}
+
 function AutoBackup() {
   const [st, setSt] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -118,6 +134,7 @@ function AutoBackup() {
         <View style={s.optRow}><Text style={s.rowText}>Only while charging</Text><Switch value={st.chargingOnly} onValueChange={(v) => opt("chargingOnly", v)} trackColor={{ true: C.blue }} /></View>
         {reason && <Text style={[s.muted, { color: C.blue, marginTop: 4 }]}>{reason} — backup will resume automatically.</Text>}
       </>}
+      <BackupProgress />
       {st.lastRun ? <Text style={[s.muted, { marginTop: 6 }]}>Last backup: {new Date(st.lastRun).toLocaleString("en-IN")}</Text> : null}
       {st.enabled && <TouchableOpacity style={s.yellowBtn} onPress={now} disabled={busy}><Text style={s.btnText}>{busy ? "Backing up…" : "Back up now"}</Text></TouchableOpacity>}
     </View>
@@ -184,6 +201,10 @@ const s = StyleSheet.create({
   photo: { width: "33%", aspectRatio: 1, margin: "0.15%" },
   row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 14, borderBottomWidth: 1, borderColor: "#eee" },
   rowText: { flex: 1, fontSize: 15, color: C.text },
+  progress: { backgroundColor: "#E8F4FA", borderRadius: 14, padding: 14, marginTop: 12 },
+  progressText: { fontWeight: "700", color: "#156E96", fontSize: 14 },
+  bar: { height: 8, borderRadius: 4, backgroundColor: "#fff", marginTop: 8, overflow: "hidden" },
+  barFill: { height: 8, borderRadius: 4, backgroundColor: C.blue },
   optRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 12 },
   card: { backgroundColor: C.bg, borderRadius: 16, padding: 16, marginTop: 20 },
   tabs: { flexDirection: "row", borderTopWidth: 1, borderColor: "#eee", paddingVertical: 6 },
