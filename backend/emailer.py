@@ -121,3 +121,41 @@ def invite_email(owner_name, plan_name, link):
         f'<p style="font-size:12px;color:#80868B;margin:12px 0 0">Sent by {brand}. We never ask for your password or payment details by email.</p>'
         '</td></tr></table></td></tr></table>')
     return subject, html
+
+
+def import_done_email(name, job, link):
+    brand = escape(os.environ["EMAIL_FROM_NAME"])
+    src = escape(job.get("source_label") or "your archive")
+    ok = job["status"] == "completed"
+    subject = f"Your {job.get('source_label') or 'archive'} import is {'complete' if ok else 'finished with problems'}"
+    stats = "".join(f'<td style="padding:10px;text-align:center"><div style="font-size:22px;font-weight:bold;color:{c}">{v}</div>'
+                    f'<div style="font-size:12px;color:#5F6368">{escape(k)}</div></td>'
+                    for k, v, c in (("Imported", job.get("imported", 0), "#1E8E3E"), ("Duplicates skipped", job.get("duplicates", 0), "#5F6368"),
+                                    ("Failed", job.get("failed", 0), "#D93025")))
+    html = (
+        '<table role="presentation" width="100%" style="background:#F7F7F7;padding:24px 0"><tr><td align="center">'
+        '<table role="presentation" width="520" style="background:#ffffff;border-radius:16px;font-family:Arial,sans-serif;color:#202124">'
+        f'<tr><td style="background:#1F94C8;border-radius:16px 16px 0 0;padding:22px 28px;color:#ffffff;font-size:22px;font-weight:bold;letter-spacing:4px">{brand.upper()}</td></tr>'
+        '<tr><td style="padding:28px">'
+        f'<p style="font-size:18px;font-weight:bold;margin:0 0 8px">Hi {escape(name.split(" ")[0])}, your {src} import has finished</p>'
+        f'<p style="font-size:15px;color:#5F6368;margin:0 0 16px">{job.get("processed", 0)} of {job.get("total_files", 0)} items were processed. '
+        'Your original files were not changed.</p>'
+        f'<table role="presentation" width="100%" style="background:#F7F7F7;border-radius:12px;margin-bottom:24px"><tr>{stats}</tr></table>'
+        f'<a href="{escape(link)}" style="display:inline-block;background:#E5AA16;color:#202124;text-decoration:none;font-weight:bold;'
+        'padding:14px 28px;border-radius:12px;font-size:16px">Open imported folder</a>'
+        f'<p style="font-size:12px;color:#80868B;margin:24px 0 0">Sent by {brand}. We never ask for your password or payment details by email.</p>'
+        '</td></tr></table></td></tr></table>')
+    return subject, html
+
+
+async def notify_import_done(db, job_id):
+    job = await db.migration_jobs.find_one({"job_id": job_id}, {"_id": 0, "items": 0})
+    user = await db.users.find_one({"user_id": job["user_id"]}, {"_id": 0, "email": 1, "name": 1})
+    if not user or job.get("notified_at"):
+        return
+    base = os.environ["APP_URL"].rstrip("/")
+    link = f"{base}/files/{job['dest_folder_id']}" if job.get("dest_folder_id") else f"{base}/transfer"
+    subject, html = import_done_email(user.get("name") or "there", job, link)
+    if await send_email(to=user["email"], subject=subject, html=html):
+        from core import iso
+        await db.migration_jobs.update_one({"job_id": job_id}, {"$set": {"notified_at": iso()}})

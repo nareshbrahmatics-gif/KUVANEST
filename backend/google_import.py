@@ -1,3 +1,4 @@
+from emailer import notify_import_done
 import os
 import time
 import asyncio
@@ -265,3 +266,4 @@ async def run_api_job(job_id):
             await db.migration_jobs.update_one({"job_id": job_id}, {"$inc": inc})
     await db.migration_jobs.update_one({"job_id": job_id}, {"$set": {"status": "completed", "finished_at": iso()}})
     await audit(uid, "migration.completed", {"job_id": job_id})
+    await notify_import_done(db, job_id)

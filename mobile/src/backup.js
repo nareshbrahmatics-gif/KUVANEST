@@ -2,6 +2,8 @@ import * as MediaLibrary from "expo-media-library";
 import * as BackgroundTask from "expo-background-task";
 import * as TaskManager from "expo-task-manager";
 import * as SecureStore from "expo-secure-store";
+import * as Network from "expo-network";
+import * as Battery from "expo-battery";
 import { api, loadToken } from "./api";
 
 export const BACKUP_TASK = "kuvanest-camera-backup";
@@ -11,12 +13,31 @@ export const getBackupState = async () => ({
   enabled: (await SecureStore.getItemAsync("kn_backup_on")) === "1",
   last: Number((await SecureStore.getItemAsync("kn_backup_last")) || 0),
   lastRun: Number((await SecureStore.getItemAsync("kn_backup_ran")) || 0),
+  wifiOnly: (await SecureStore.getItemAsync("kn_backup_wifi")) !== "0",
+  chargingOnly: (await SecureStore.getItemAsync("kn_backup_charge")) === "1",
 });
 
+export const setBackupOption = (key, on) => SecureStore.setItemAsync(key === "wifiOnly" ? "kn_backup_wifi" : "kn_backup_charge", on ? "1" : "0");
+
+// Returns a reason string when conditions block backup, otherwise null.
+export async function blockedReason({ wifiOnly, chargingOnly }) {
+  if (wifiOnly) {
+    const net = await Network.getNetworkStateAsync();
+    if (net.type !== Network.NetworkStateType.WIFI && net.type !== Network.NetworkStateType.ETHERNET) return "Waiting for Wi-Fi";
+  }
+  if (chargingOnly) {
+    const b = await Battery.getBatteryStateAsync();
+    if (b !== Battery.BatteryState.CHARGING && b !== Battery.BatteryState.FULL) return "Waiting for charger";
+  }
+  return null;
+}
+
 // Uploads photos/videos created after the last synced one, oldest first, so an interrupted run resumes cleanly.
-export async function runBackup() {
-  const { enabled, last } = await getBackupState();
+export async function runBackup({ force = false } = {}) {
+  const st = await getBackupState();
+  const { enabled, last } = st;
   if (!enabled || !(await loadToken())) return 0;
+  if (!force && (await blockedReason(st))) return 0;
   const perm = await MediaLibrary.getPermissionsAsync();
   if (!perm.granted) return 0;
   const page = await MediaLibrary.getAssetsAsync({

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Check, Loader2, AlertTriangle } from "lucide-react";
+import { Check, Loader2, AlertTriangle, QrCode, CreditCard } from "lucide-react";
+import { UpiQr } from "@/components/UpiQr";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -102,7 +103,10 @@ export default function Plans() {
       <Dialog open={!!pick} onOpenChange={() => setPick(null)}>
         <DialogContent className="rounded-2xl" data-testid="checkout-dialog">
           {pick && <>
-            <DialogHeader><DialogTitle className="font-display">Subscribe to {pick.name}</DialogTitle><DialogDescription>{live ? "Secure payment by Razorpay — UPI, cards and NetBanking." : "MOCKED checkout — no real payment is taken."}</DialogDescription></DialogHeader>
+            <DialogHeader><DialogTitle className="font-display">Subscribe to {pick.name}</DialogTitle><DialogDescription>{live ? "Secure payment by Razorpay — scan a UPI QR, or pay with a UPI app, card or NetBanking." : "MOCKED checkout — no real payment is taken. UPI QR appears once Razorpay is connected."}</DialogDescription></DialogHeader>
+            {live && <div className="grid grid-cols-2 gap-2">{[["qr", "Scan UPI QR", QrCode], ["checkout", "UPI app / Card", CreditCard]].map(([v, l, I]) => (
+              <button key={v} onClick={() => setMethod(v)} data-testid={`checkout-mode-${v}`} className={`h-11 rounded-xl text-sm font-semibold border flex items-center justify-center gap-2 ${(method === "checkout" ? "checkout" : "qr") === v ? "border-[#1F94C8] bg-[#E8F4FA]" : "border-gray-200"}`}><I className="w-4 h-4" />{l}</button>))}</div>}
+            {live && method !== "checkout" && <UpiQr plan={pick} onPaid={done} />}
             {!live && <div className="grid grid-cols-3 gap-2">{[["upi", "UPI"], ["card", "Card"], ["netbanking", "NetBanking"]].map(([v, l]) => (
               <button key={v} onClick={() => setMethod(v)} data-testid={`checkout-method-${v}`} className={`h-11 rounded-xl text-sm font-semibold border ${method === v ? "border-[#1F94C8] bg-[#E8F4FA]" : "border-gray-200"}`}>{l}</button>))}</div>}
             <div className="rounded-xl bg-[#F7F7F7] p-4 space-y-2 text-sm">
@@ -110,7 +114,7 @@ export default function Plans() {
               <div className="flex justify-between text-[#5F6368]"><span>GST ({b?.gst_percent}%)</span><span>{inr(tax)}</span></div>
               <div className="flex justify-between font-bold pt-2 border-t border-gray-200"><span>Total</span><span data-testid="checkout-total">{inr(pick.price + tax)}</span></div>
             </div>
-            <DialogFooter><Button onClick={pay} disabled={busy} className="h-12 rounded-xl w-full font-semibold" data-testid="checkout-pay-btn">{busy && <Loader2 className="w-4 h-4 animate-spin" />}Pay {inr(pick.price + tax)}</Button></DialogFooter>
+            {!(live && method !== "checkout") && <DialogFooter><Button onClick={pay} disabled={busy} className="h-12 rounded-xl w-full font-semibold" data-testid="checkout-pay-btn">{busy && <Loader2 className="w-4 h-4 animate-spin" />}Pay {inr(pick.price + tax)}</Button></DialogFooter>}
           </>}
         </DialogContent>
       </Dialog>

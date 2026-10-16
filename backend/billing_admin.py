@@ -97,15 +97,15 @@ async def activate_plan(user_id, plan_id):
     return "upgrade" if plan["price"] > old["price"] else "downgrade"
 
 
-async def mark_paid(order_id, payment_id=None, method=None):
+async def mark_paid(order_id, payment_id=None, method=None, field="razorpay_order_id"):
     """Idempotent: only the first caller flips created->paid and activates the plan."""
     upd = {"status": "paid", "razorpay_payment_id": payment_id, "paid_at": iso()}
     if method:
         upd["method"] = method
-    pay = await db.payments.find_one_and_update({"razorpay_order_id": order_id, "status": "created"}, {"$set": upd})
+    pay = await db.payments.find_one_and_update({field: order_id, "status": "created"}, {"$set": upd})
     if pay:
         await activate_plan(pay["user_id"], pay["plan_id"])
-    return await db.payments.find_one({"razorpay_order_id": order_id}, {"_id": 0, "user_id": 0})
+    return await db.payments.find_one({field: order_id}, {"_id": 0, "user_id": 0})
 
 
 @router.post("/billing/subscribe")
@@ -136,6 +136,40 @@ async def create_order(body: SubIn, user=Depends(get_current_user)):
     await db.payments.insert_one(dict(pay))
     return {"order_id": order["id"], "amount": order["amount"], "currency": "INR", "key_id": os.environ["RAZORPAY_KEY_ID"],
             "plan_name": plan["name"], "name": user["name"], "email": user["email"]}
+
+
+@router.post("/billing/upi-qr")
+async def create_upi_qr(body: SubIn, user=Depends(get_current_user)):
+    client = rzp_client()
+    if not client:
+        raise HTTPException(400, "Razorpay is not configured yet")
+    plan = await check_plan_change(user, body.plan_id)
+    if plan["price"] <= 0:
+        raise HTTPException(400, "Free plan does not need payment")
+    pay = await new_payment(user["user_id"], plan, "upi_qr", "razorpay", "created")
+    close_by = int(now().timestamp()) + 15 * 60
+    try:
+        qr = client.qrcode.create({"type": "upi_qr", "name": "KuvaNest", "usage": "single_use", "fixed_amount": True,
+                                   "payment_amount": int(round(pay["total"] * 100)), "description": f"KuvaNest {plan['name']} plan",
+                                   "close_by": close_by, "notes": {"user_id": user["user_id"], "plan_id": plan["plan_id"], "invoice": pay["invoice_no"]}})
+    except Exception as e:
+        raise HTTPException(502, f"Could not create UPI QR: {str(e)[:120]}")
+    pay["razorpay_qr_id"] = qr["id"]
+    await db.payments.insert_one(dict(pay))
+    return {"qr_id": qr["id"], "image_url": qr["image_url"], "amount": pay["total"], "close_by": close_by, "plan_name": plan["name"]}
+
+
+@router.get("/billing/upi-qr/{qr_id}")
+async def upi_qr_status(qr_id: str, user=Depends(get_current_user)):
+    pay = await db.payments.find_one({"razorpay_qr_id": qr_id, "user_id": user["user_id"]}, {"_id": 0})
+    if not pay:
+        raise HTTPException(404, "QR not found")
+    if pay["status"] == "created" and (client := rzp_client()):
+        items = client.qrcode.fetch_all_payments(qr_id).get("items", [])
+        paid = next((p for p in items if p.get("status") == "captured"), None)
+        if paid:
+            pay = await mark_paid(qr_id, paid["id"], "upi", field="razorpay_qr_id")
+    return {"status": pay["status"]}
 
 
 class VerifyIn(BaseModel):
@@ -180,6 +214,10 @@ async def razorpay_webhook(request: Request):
     entity = (event.get("payload", {}).get("payment") or {}).get("entity", {})
     if event.get("event") in ("payment.captured", "order.paid") and entity.get("order_id"):
         await mark_paid(entity["order_id"], entity.get("id"), entity.get("method"))
+    elif event.get("event") == "qr_code.credited":
+        qr = (event.get("payload", {}).get("qr_code") or {}).get("entity", {})
+        if qr.get("id") and entity.get("status") == "captured":
+            await mark_paid(qr["id"], entity.get("id"), "upi", field="razorpay_qr_id")
     elif event.get("event") == "payment.failed" and entity.get("order_id"):
         await db.payments.update_one({"razorpay_order_id": entity["order_id"], "status": "created"}, {"$set": {"status": "failed"}})
     return {"status": "ok"}

@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, FlatList, A
 import { StatusBar } from "expo-status-bar";
 import * as ImagePicker from "expo-image-picker";
 import { api, loadToken, saveToken, fileSource, fmtBytes } from "./src/api";
-import { runBackup, setBackupEnabled, getBackupState } from "./src/backup";
+import { runBackup, setBackupEnabled, getBackupState, setBackupOption, blockedReason } from "./src/backup";
 
 const C = { blue: "#1F94C8", yellow: "#E5AA16", folder: "#FEF9E7", text: "#202124", muted: "#5F6368", bg: "#F7F7F7" };
 const TABS = ["Home", "Photos", "Files", "Transfer", "Account"];
@@ -99,10 +99,12 @@ const Transfer = () => (
 function AutoBackup() {
   const [st, setSt] = useState(null);
   const [busy, setBusy] = useState(false);
-  const refresh = () => getBackupState().then(setSt);
+  const [reason, setReason] = useState(null);
+  const refresh = () => getBackupState().then(async (x) => { setSt(x); setReason(x.enabled ? await blockedReason(x) : null); });
+  const opt = async (k, on) => { await setBackupOption(k, on); refresh(); };
   useEffect(() => { refresh(); }, []);
   const toggle = async (on) => { try { await setBackupEnabled(on); refresh(); } catch (e) { Alert.alert("Backup", e.message); } };
-  const now = async () => { setBusy(true); const n = await runBackup(); setBusy(false); refresh(); Alert.alert("Backup", n ? `${n} new item(s) backed up` : "Everything is already backed up"); };
+  const now = async () => { setBusy(true); const n = await runBackup({ force: true }); setBusy(false); refresh(); Alert.alert("Backup", n ? `${n} new item(s) backed up` : "Everything is already backed up"); };
   if (!st) return null;
   return (
     <View style={s.card}>
@@ -111,6 +113,11 @@ function AutoBackup() {
         <Switch value={st.enabled} onValueChange={toggle} trackColor={{ true: C.blue }} />
       </View>
       <Text style={[s.muted, { marginTop: 6 }]}>New camera photos and videos are uploaded when you open the app, and in the background whenever your phone allows it (usually every 15+ minutes on Wi-Fi/charging).</Text>
+      {st.enabled && <>
+        <View style={s.optRow}><Text style={s.rowText}>Only on Wi-Fi (saves mobile data)</Text><Switch value={st.wifiOnly} onValueChange={(v) => opt("wifiOnly", v)} trackColor={{ true: C.blue }} /></View>
+        <View style={s.optRow}><Text style={s.rowText}>Only while charging</Text><Switch value={st.chargingOnly} onValueChange={(v) => opt("chargingOnly", v)} trackColor={{ true: C.blue }} /></View>
+        {reason && <Text style={[s.muted, { color: C.blue, marginTop: 4 }]}>{reason} — backup will resume automatically.</Text>}
+      </>}
       {st.lastRun ? <Text style={[s.muted, { marginTop: 6 }]}>Last backup: {new Date(st.lastRun).toLocaleString("en-IN")}</Text> : null}
       {st.enabled && <TouchableOpacity style={s.yellowBtn} onPress={now} disabled={busy}><Text style={s.btnText}>{busy ? "Backing up…" : "Back up now"}</Text></TouchableOpacity>}
     </View>
@@ -177,6 +184,7 @@ const s = StyleSheet.create({
   photo: { width: "33%", aspectRatio: 1, margin: "0.15%" },
   row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 14, borderBottomWidth: 1, borderColor: "#eee" },
   rowText: { flex: 1, fontSize: 15, color: C.text },
+  optRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 12 },
   card: { backgroundColor: C.bg, borderRadius: 16, padding: 16, marginTop: 20 },
   tabs: { flexDirection: "row", borderTopWidth: 1, borderColor: "#eee", paddingVertical: 6 },
   tab: { flex: 1, alignItems: "center", paddingVertical: 10, borderRadius: 12, marginHorizontal: 2 },
