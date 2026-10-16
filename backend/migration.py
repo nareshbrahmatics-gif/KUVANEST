@@ -122,7 +122,7 @@ async def job_action(job_id: str, action: str, user=Depends(get_current_user)):
     if action == "retry":
         if j.get("mode") != "api" and not storage.tmp_path(f"{j['upload_id']}.zip").exists():
             raise HTTPException(400, "Archive no longer available. Please upload it again.")
-        upd.update({"processed": 0, "errors": [], "failed": 0, "finished_at": None, "notified_at": None})
+        upd.update({"processed": 0, "errors": [], "failed": 0, "imported": 0, "duplicates": 0, "skipped": 0, "bytes_done": 0, "finished_at": None, "notified_at": None})
     await db.migration_jobs.update_one({"job_id": job_id}, {"$set": upd})
     if action in ("retry", "resume") and job_id not in TASKS:
         start_worker(job_id)
@@ -160,6 +160,7 @@ def takeout_times(zf, infos):
 async def fail(job_id, msg):
     await db.migration_jobs.update_one({"job_id": job_id}, {"$set": {"status": "failed", "finished_at": iso()},
                                                             "$push": {"errors": {"file": "-", "error": msg}}})
+    await notify_import_done(db, job_id)
 
 
 async def dest_folder(job):

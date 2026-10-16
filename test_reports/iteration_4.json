@@ -1,0 +1,35 @@
+{
+  "summary": "Iteration 4: Razorpay UPI QR mock-mode guards, import-done email (ZIP), retry resetting notified_at, plus regression. Backend 80/80 tests pass (71 prior + 9 new). POST /api/billing/upi-qr gives 400 'Razorpay is not configured yet'; GET /api/billing/upi-qr/unknown gives 404 'QR not found'; webhook without secret gives 400; both need auth (401). ZIP Takeout import for delivered+kn<ts>@resend.dev completed (3 imported), the email API returned 202 and notified_at was set. Retry returned notified_at=null, the job ran again to completed, a second email returned 202 and notified_at was set again. Email failure handled gracefully: a 422 undeliverable_recipient for demo@kuvanest.com was only logged and job mig_dc82f4dd11914380 still completed. Frontend: the mock checkout dialog shows the description 'MOCKED checkout ... UPI QR appears once Razorpay is connected.', 0 checkout-mode tabs, no upi-qr component, and UPI/Card/NetBanking buttons. Mock pay with a throwaway user switched the plan to Starter and added an invoice row. Smoke OK: login, home, files upload (TEST_iter4.txt shown), photos, family, account, transfer (job cards with retry/open-folder), admin dashboard. No page errors.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/migrations/{id}/retry", "issue": "Retry resets processed/failed/errors but NOT imported/duplicates/bytes_done. After retrying a completed 3-file job, the DB shows imported=3, duplicates=3, processed=3, total=3. The second import-done email therefore reports '3 imported + 3 duplicates' for 3 items, and the UI job card shows inflated counts. Fix: also reset imported, duplicates, skipped and bytes_done in upd for retry (or keep them only for failed-resume semantics)."},
+      {"endpoint": "emailer.notify_import_done", "issue": "Not wrapped in try/except inside run_job/run_api_job. send_email catches HTTP errors, but _assert_safe_email ValueError, a missing APP_URL KeyError, or a db error would raise an unhandled task exception after the job is already marked completed. The job status is safe, but the exception goes unlogged as 'Task exception was never retrieved'. Wrap the call in try/except with log.exception."},
+      {"endpoint": "migration.fail()", "issue": "Failed jobs (damaged ZIP, quota exceeded) never call notify_import_done, even though import_done_email has a 'finished with problems' branch. Decide whether failed jobs should email."},
+      {"endpoint": "GET /api/billing/upi-qr/{qr_id}", "issue": "When live, client.qrcode.fetch_all_payments has no try/except, so a Razorpay error returns 500 on every 3s poll. Return the current status on error instead. Cannot be tested in mock mode."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_upi_qr_import_email.py", "/app/test_reports/pytest/pytest_iter4.xml", "/app/test_reports/pytest/pytest_all_iter4.xml"],
+  "action_items": [
+    "Reset imported/duplicates/skipped/bytes_done on retry so the counts in the retry email and job card are correct",
+    "Wrap notify_import_done calls in try/except in migration.run_job and google_import.run_api_job",
+    "Optional: add error handling around Razorpay fetch_all_payments in upi_qr_status"
+  ],
+  "critical_code_review_comments": [
+    "job_action retry: counter reset incomplete (see backend minor #1)",
+    "notify_import_done: idempotency via notified_at works. It is only set on a successful send, so a 429 leaves it null with no later retry of the email. Acceptable, but note it.",
+    "webhook qr_code.credited does not compare the payment amount with the expected total. fixed_amount QR mitigates this, but validating entity.amount == total*100 is cheap defence."
+  ],
+  "updated_files": ["/app/backend/tests/test_upi_qr_import_email.py"],
+  "success_rate": {"backend": "100% (80/80); 1 minor logic bug in retry counters", "frontend": "100%"},
+  "seed_data_creation": "Throwaway users: delivered+kn<ts>@resend.dev (import job with 3 files), test_ui_pay4@example.com (now on Starter via mock pay). File TEST_iter4.txt uploaded to demo's Files root.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Payments are mock (empty RAZORPAY_* keys); live UPI QR is untested. Email sends are confirmed in /var/log/supervisor/backend.err.log ('email/send ... 202'). Note: pytest.ini runs with xdist, so -s prints are hidden; check mongo migration_jobs directly. The Recycle Bin route is /bin.",
+  "rca of the issue": "Retry counter inflation: job_action('retry') sets processed=0, failed=0 and errors=[] but leaves imported/duplicates as they were. run_job then re-extracts all files, finds them as duplicates (same sha) and $inc's duplicates, so imported+duplicates > total_files. Repro: import a 3-file ZIP, then POST /retry, then GET the job: imported=3, duplicates=3."
+}

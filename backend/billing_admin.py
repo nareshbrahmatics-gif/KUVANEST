@@ -165,7 +165,10 @@ async def upi_qr_status(qr_id: str, user=Depends(get_current_user)):
     if not pay:
         raise HTTPException(404, "QR not found")
     if pay["status"] == "created" and (client := rzp_client()):
-        items = client.qrcode.fetch_all_payments(qr_id).get("items", [])
+        try:
+            items = client.qrcode.fetch_all_payments(qr_id).get("items", [])
+        except Exception:
+            items = []
         paid = next((p for p in items if p.get("status") == "captured"), None)
         if paid:
             pay = await mark_paid(qr_id, paid["id"], "upi", field="razorpay_qr_id")

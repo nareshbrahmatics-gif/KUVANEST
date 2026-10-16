@@ -149,6 +149,13 @@ def import_done_email(name, job, link):
 
 
 async def notify_import_done(db, job_id):
+    try:
+        await _notify_import_done(db, job_id)
+    except Exception:
+        log.exception("import-done email failed for %s", job_id)
+
+
+async def _notify_import_done(db, job_id):
     job = await db.migration_jobs.find_one({"job_id": job_id}, {"_id": 0, "items": 0})
     user = await db.users.find_one({"user_id": job["user_id"]}, {"_id": 0, "email": 1, "name": 1})
     if not user or job.get("notified_at"):

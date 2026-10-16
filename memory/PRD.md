@@ -35,6 +35,12 @@ React (CRA) + FastAPI + MongoDB. Backend modules: core.py (db, LocalObjectStorag
 - Mobile: automatic camera backup (foreground + expo-background-task)
 - Landing tagline: India-first personal and enterprise sovereign cloud storage
 
+## Iteration 4 (2026-06)
+- Razorpay dynamic UPI QR (single-use fixed amount incl. GST, 15-min expiry, polling + qr_code.credited webhook) — needs Razorpay keys + QR Codes enabled
+- Import-done summary email (ZIP + Google jobs, success or failure) with link to imported folder; idempotent via notified_at
+- Mobile backup: Only on Wi-Fi (default) / Only while charging options
+- Still waiting on user: Google keys, Razorpay keys, Extreme Compute details
+
 ## Backlog
 - P0: add Razorpay keys (live payments), Extreme Compute storage adapter
 - P1: Google Drive/Photos Picker connectors, business team seats, thumbnails/HEIC conversion, file versioning

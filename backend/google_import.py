@@ -230,8 +230,9 @@ async def run_api_job(job_id):
     try:
         token = await access_token(uid)
     except HTTPException as e:
-        return await db.migration_jobs.update_one({"job_id": job_id}, {"$set": {"status": "failed", "finished_at": iso()},
-                                                  "$push": {"errors": {"file": "-", "error": e.detail}}})
+        await db.migration_jobs.update_one({"job_id": job_id}, {"$set": {"status": "failed", "finished_at": iso()},
+                                           "$push": {"errors": {"file": "-", "error": e.detail}}})
+        return await notify_import_done(db, job_id)
     root = await system_folder(uid, "google")
     sub = await ensure_folder(uid, f"{job['source_label']} {datetime.fromisoformat(job['created_at']).strftime('%d %b %Y %H:%M')}", root["folder_id"])
     await db.migration_jobs.update_one({"job_id": job_id}, {"$set": {"status": "running", "dest_folder_id": sub["folder_id"],
